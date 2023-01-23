@@ -15,7 +15,7 @@ LIBRARY_IOC = AD{{ cookiecutter.driver_name }}
 LIB_SRCS += AD{{ cookiecutter.driver_name }}.cpp
 
 
-DBD += {{ cookiecutter.driver_name_short.lower() }}Support.dbd
+DBD += {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}Support.dbd
 
 include $(ADCORE)/ADApp/commonLibraryMakefile
 

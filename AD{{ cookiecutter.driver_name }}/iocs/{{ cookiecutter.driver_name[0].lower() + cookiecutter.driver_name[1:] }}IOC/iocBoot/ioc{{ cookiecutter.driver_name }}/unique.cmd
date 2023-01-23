@@ -3,10 +3,10 @@
 #
 
 # Maintainer
-epicsEnvSet("ENGINEER",                 "{{ cookiecutter.deployer }}")
+epicsEnvSet("ENGINEER",                 "{{ cookiecutter.author }}")
 
 # IOC Information
-epicsEnvSet("PORT",                     "{{ cookiecutter.driver_name_short.upper() }}1")
+epicsEnvSet("PORT",                     "{{ cookiecutter.driver_name.upper() + '1' }}")
 epicsEnvSet("IOC",                      "ioc{{ cookiecutter.driver_name }}")
 
 epicsEnvSet("EPICS_CA_AUTO_ADDR_LIST",  "NO")
@@ -17,7 +17,7 @@ epicsEnvSet("EPICS_CA_MAX_ARRAY_BYTES", "6000000")
 # PV and IOC Name configs
 epicsEnvSet("PREFIX",                   "TST-ES{{{ cookiecutter.driver_name }}-Cam:1}")
 epicsEnvSet("HOSTNAME",                 "localhost")
-epicsEnvSet("IOCNAME",                  "cam-{{ cookiecutter.driver_name_short.lower() }}")
+epicsEnvSet("IOCNAME",                  "{{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}")
 
 # Imag and data size
 epicsEnvSet("QSIZE",                    "30")

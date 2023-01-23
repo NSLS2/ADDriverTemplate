@@ -1,5 +1,5 @@
-/* {{ cookiecutter.driver_name_short.lower() }}AppMain.cpp */
-/* Author: {{ cookiecutter.deployer }} Date: {{ cookiecutter.copyright_year }}    */
+/* {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}AppMain.cpp */
+/* Author: {{ cookiecutter.author }} Date: {{ cookiecutter.copyright_year }}    */
 
 #include <stddef.h>
 #include <stdlib.h>

@@ -84,7 +84,7 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
         // {{ cookiecutter.driver_name }} Functions - Logging/Reporting
         //-----------------------------------------
 
-        //function used to report errors in {{ cookiecutter.driver_name_short.lower() }} operations
+        //function used to report errors in {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }} operations
         // Note that vendor libraries usually have a status data structure, if not
         // it might be wise to make one
         void report{{ cookiecutter.driver_name }}Error(______ status, const char* functionName);

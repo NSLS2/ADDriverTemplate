@@ -3,12 +3,12 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-PROD_NAME = {{ cookiecutter.driver_name_short.lower() }}App
+PROD_NAME = {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}App
 PROD_IOC += $(PROD_NAME)
 
 # <name>.dbd will be created from <name>Include.dbd
 DBD += $(PROD_NAME).dbd
-$(PROD_NAME)_DBD += {{ cookiecutter.driver_name_short.lower() }}Support.dbd
+$(PROD_NAME)_DBD += {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}Support.dbd
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 $(PROD_NAME)_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp $(PROD_NAME)Main.cpp

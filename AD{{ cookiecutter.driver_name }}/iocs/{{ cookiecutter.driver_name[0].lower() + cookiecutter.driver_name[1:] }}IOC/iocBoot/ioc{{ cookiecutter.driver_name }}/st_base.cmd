@@ -5,8 +5,8 @@ errlogInit(20000)
 < envPaths
 
 #epicsThreadSleep(20)
-dbLoadDatabase("$(AD{{ cookiecutter.driver_name }})/iocs/{{ cookiecutter.driver_name_short.lower() }}IOC/dbd/{{ cookiecutter.driver_name_short.lower() }}App.dbd")
-{{ cookiecutter.driver_name_short.lower() }}App_registerRecordDeviceDriver(pdbbase) 
+dbLoadDatabase("$(AD{{ cookiecutter.driver_name }})/iocs/{{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}IOC/dbd/{{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}App.dbd")
+{{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}App_registerRecordDeviceDriver(pdbbase) 
 
 #/*
 # * Constructor for AD{{ cookiecutter.driver_name }} driver. Most params are passed to the parent ADDriver constructor. 
@@ -52,7 +52,7 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 < $(ADCORE)/iocBoot/commonPlugins.cmd
 #
 
-set_requestfile_path("$(AD{{ cookiecutter.driver_name }})/{{ cookiecutter.driver_name_short.lower() }}App/Db")
+set_requestfile_path("$(AD{{ cookiecutter.driver_name }})/{{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}App/Db")
 
 #asynSetTraceMask($(PORT),0,0x09)
 #asynSetTraceMask($(PORT),0,0x11)

@@ -2,13 +2,13 @@
 TOP = .
 include $(TOP)/configure/CONFIG
 DIRS := $(DIRS) configure
-DIRS := $(DIRS) {{ cookiecutter.driver_name_short.lower() }}App
-DIRS := $(DIRS) {{ cookiecutter.driver_name_short.lower() }}Support
+DIRS := $(DIRS) {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}App
+DIRS := $(DIRS) {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}Support
 
-{{ cookiecutter.driver_name_short.lower() }}App_DEPEND_DIRS += {{ cookiecutter.driver_name_short.lower() }}Support
+{{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}App_DEPEND_DIRS += {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}Support
 ifeq ($(BUILD_IOCS), YES)
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))
-iocs_DEPEND_DIRS += {{ cookiecutter.driver_name_short.lower() }}App
+iocs_DEPEND_DIRS += {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}App
 endif
 include $(TOP)/configure/RULES_TOP
 
