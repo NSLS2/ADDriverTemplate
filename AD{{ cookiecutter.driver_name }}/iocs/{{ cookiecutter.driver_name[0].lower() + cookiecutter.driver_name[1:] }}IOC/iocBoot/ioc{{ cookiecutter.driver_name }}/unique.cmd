@@ -15,7 +15,7 @@ epicsEnvSet("EPICS_CA_MAX_ARRAY_BYTES", "6000000")
 
 
 # PV and IOC Name configs
-epicsEnvSet("PREFIX",                   "TST-ES{{{ cookiecutter.driver_name }}-Cam:1}")
+epicsEnvSet("PREFIX",                   "DEV:{{ cookiecutter.driver_name.upper() }}-DET:1")
 epicsEnvSet("HOSTNAME",                 "localhost")
 epicsEnvSet("IOCNAME",                  "{{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}")
 
