@@ -2,11 +2,13 @@
  * Header file for the AD{{ cookiecutter.driver_name }} EPICS driver
  *
  * This file contains the definitions of PV params, and the definition of the AD{{ cookiecutter.driver_name }} class and functions.
+ * 
+ * This file was initially generated with the help of the ADDriverTemplate:
+ * https://github.com/jwlodek/ADDriverTemplate on {% now 'local', '%d/%m/%Y' %}
  *
- * Author: 
- * Created:
- *
- * Copyright (c) :
+ * Author: {{ cookiecutter.author }}
+ * 
+ * Copyright (c) : {{ cookiecutter.institution }}, {% now 'utc', '%Y' %}
  *
  */
 

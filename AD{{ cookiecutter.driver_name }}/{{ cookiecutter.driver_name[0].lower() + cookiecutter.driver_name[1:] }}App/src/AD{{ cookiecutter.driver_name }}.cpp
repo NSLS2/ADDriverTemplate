@@ -2,15 +2,15 @@
  * Main source file for the AD{{ cookiecutter.driver_name }} EPICS driver 
  * 
  * This file was initially generated with the help of the ADDriverTemplate:
- * https://github.com/jwlodek/ADDriverTemplate
+ * https://github.com/jwlodek/ADDriverTemplate on {% now 'local', '%d/%m/%Y' %}
  *
  * This file contains functions for connecting and disconnectiong from the camera,
  * for starting and stopping image acquisition, and for controlling all camera functions through
  * EPICS.
  * 
- * Author: {{ cookiecutter.deployer }}
+ * Author: {{ cookiecutter.author }}
  * 
- * Copyright (c) : {{ cookiecutter.institution }}, {{ cookiecutter.year }} 
+ * Copyright (c) : {{ cookiecutter.institution }}, {% now 'utc', '%Y' %}
  * 
  */
 
@@ -74,8 +74,8 @@ extern "C" int AD{{ cookiecutter.driver_name }}Config(const char* portName, cons
  * @return:     void
  */
 static void exitCallbackC(void* pPvt){
-    AD{{ cookiecutter.driver_name }}* p{{ cookiecutter.driver_name.upper() }} = (AD{{ cookiecutter.driver_name }}*) pPvt;
-    delete(p{{ cookiecutter.driver_name.upper() }});
+    AD{{ cookiecutter.driver_name }}* p{{ cookiecutter.driver_name }} = (AD{{ cookiecutter.driver_name }}*) pPvt;
+    delete(p{{ cookiecutter.driver_name }});
 }
 
 
