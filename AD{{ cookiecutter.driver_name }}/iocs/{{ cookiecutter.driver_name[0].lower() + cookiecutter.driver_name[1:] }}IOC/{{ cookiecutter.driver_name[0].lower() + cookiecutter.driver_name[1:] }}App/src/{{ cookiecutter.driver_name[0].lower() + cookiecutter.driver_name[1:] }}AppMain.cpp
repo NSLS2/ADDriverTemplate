@@ -1,5 +1,5 @@
 /* {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}AppMain.cpp */
-/* Author: {{ cookiecutter.author }} Date: {{ cookiecutter.copyright_year }}    */
+/* Author: {{ cookiecutter.author }} Date: {% now 'local', '%Y' %}  */
 
 #include <stddef.h>
 #include <stdlib.h>

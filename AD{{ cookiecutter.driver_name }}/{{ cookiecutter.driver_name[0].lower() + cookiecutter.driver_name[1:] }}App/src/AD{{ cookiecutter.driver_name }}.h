@@ -8,7 +8,7 @@
  *
  * Author: {{ cookiecutter.author }}
  * 
- * Copyright (c) : {{ cookiecutter.institution }}, {% now 'utc', '%Y' %}
+ * Copyright (c) : {{ cookiecutter.institution }}, {% now 'local', '%Y' %}
  *
  */
 
