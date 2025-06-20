@@ -2,11 +2,7 @@
  * Main source file for the AD{{ cookiecutter.driver_name }} EPICS driver 
  * 
  * This file was initially generated with the help of the ADDriverTemplate:
- * https://github.com/jwlodek/ADDriverTemplate on {% now 'local', '%d/%m/%Y' %}
- *
- * This file contains functions for connecting and disconnectiong from the camera,
- * for starting and stopping image acquisition, and for controlling all camera functions through
- * EPICS.
+ * https://github.com/NSLS2/ADDriverTemplate on {% now 'local', '%d/%m/%Y' %}
  * 
  * Author: {{ cookiecutter.author }}
  * 
@@ -14,13 +10,10 @@
  * 
  */
 
-// Standard includes
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-
-// EPICS includes
 #include <epicsTime.h>
 #include <epicsThread.h>
 #include <epicsExit.h>
@@ -29,136 +22,36 @@
 #include <iocsh.h>
 #include <epicsExport.h>
 
-
-// Area Detector include
 #include "AD{{ cookiecutter.driver_name }}.h"
-
 
 using namespace std;
 
-// Add any additional namespaces here
-
-
 const char* driverName = "AD{{ cookiecutter.driver_name }}";
-
-// Add any driver constants here
-
-
-// -----------------------------------------------------------------------
-// AD{{ cookiecutter.driver_name }} Utility Functions (Reporting/Logging/ExternalC)
-// -----------------------------------------------------------------------
-
 
 /*
  * External configuration function for AD{{ cookiecutter.driver_name }}.
  * Envokes the constructor to create a new AD{{ cookiecutter.driver_name }} object
  * This is the function that initializes the driver, and is called in the IOC startup script
- * 
- * NOTE: When implementing a new driver with ADDriverTemplate, your camera may use a different connection method than
- * a const char* connectionParam. Just edit the param to fit your device, and make sure to make the same edit to the constructor below
  *
  * @params[in]: all passed into constructor
  * @return:     status
  */
-extern "C" int AD{{ cookiecutter.driver_name }}Config(const char* portName, const char* connectionParam, int maxBuffers, size_t maxMemory, int priority, int stackSize){
-    new AD{{ cookiecutter.driver_name }}(portName, connectionParam, maxBuffers, maxMemory, priority, stackSize);
+extern "C" int AD{{ cookiecutter.driver_name }}Config(const char* portName, .....){
+    new AD{{ cookiecutter.driver_name }}(portName, ......);
     return(asynSuccess);
 }
 
 
 /*
- * Callback function called when IOC is terminated.
- * Deletes created object
+ * Callback function fired when IOC is terminated.
+ * Deletes the driver object and performs cleanup
  *
- * @params[in]: pPvt -> pointer to the ADDRIVERNAMESTANDATD object created in AD{{ cookiecutter.driver_name }}Config
+ * @params[in]: pPvt -> pointer to the driver object created in AD{{ cookiecutter.driver_name }}Config
  * @return:     void
  */
 static void exitCallbackC(void* pPvt){
     AD{{ cookiecutter.driver_name }}* p{{ cookiecutter.driver_name }} = (AD{{ cookiecutter.driver_name }}*) pPvt;
     delete(p{{ cookiecutter.driver_name }});
-}
-
-
-/**
- * Simple function that prints all information about a connected camera
- * 
- * @return: void
- */
-void AD{{ cookiecutter.driver_name }}::printConnectedDeviceInfo(){
-    printf("--------------------------------------\n");
-    printf("Connected to {{ cookiecutter.driver_name }} device\n");
-    printf("--------------------------------------\n");
-    // Add any information you wish to print about the device here
-    printf("--------------------------------------\n");
-}
-
-
-// -----------------------------------------------------------------------
-// AD{{ cookiecutter.driver_name }} Connect/Disconnect Functions
-// -----------------------------------------------------------------------
-
-
-/**
- * Function that is used to initialize and connect to the device.
- * 
- * NOTE: Again, it is possible that for your camera, a different connection type is used (such as a product ID [int])
- * Make sure you use the same connection type as passed in the AD{{ cookiecutter.driver_name }}Config function and in the constructor.
- * 
- * @params[in]: serialNumber    -> serial number of camera to connect to. Passed through IOC shell
- * @return:     status          -> success if connected, error if not connected
- */
-asynStatus AD{{ cookiecutter.driver_name }}::connectToDevice{{ cookiecutter.driver_name }}(const char* serialNumber){
-    const char* functionName = "connectToDevice{{ cookiecutter.driver_name }}";
-    bool connected = false;
-
-
-    // Implement connecting to the camera here
-    // Usually the vendor provides examples of how to do this with the library/SDK
-
-
-    if(connected) return asynSuccess;
-    else{
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Error: failed to connect to device\n", driverName, functionName);
-        return asynError;
-    }
-}
-
-
-/**
- * Function that disconnects from any connected device
- * First checks if is connected, then if it is, it frees the memory
- * for the info and the camera
- * 
- * @return: status  -> success if freed, error if never connected
- */
-asynStatus AD{{ cookiecutter.driver_name }}::disconnectFromDevice{{ cookiecutter.driver_name }}(){
-    const char* functionName = "disconnectFromDevice{{ cookiecutter.driver_name }}";
-
-    // Free up any data allocated by driver here, and call the vendor libary to disconnect
-
-    return asynSuccess;
-}
-
-
-/**
- * Function that updates PV values with camera information
- * 
- * @return: status
- */
-asynStatus AD{{ cookiecutter.driver_name }}::getDeviceInformation(){
-    const char* functionName = "collectCameraInformation";
-    asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Collecting camera information\n", driverName, functionName);
-
-    // Use the vendor library to collect information about the connected camera here, and set the appropriate PVs
-    // Make sure you check if camera is connected before calling on it for information
-
-    //setStringParam(ADManufacturer,        _____________);
-    //setStringParam(ADSerialNumber,        _____________);
-    //setStringParam(ADFirmwareVersion,     _____________);
-    //setStringParam(ADModel,               _____________);
-
-    return status;
 }
 
 
@@ -169,39 +62,15 @@ asynStatus AD{{ cookiecutter.driver_name }}::getDeviceInformation(){
 
 
 /**
- * Function responsible for starting camera image acqusition. First, check if there is a
- * camera connected. Then, set camera values by reading from PVs. Then, we execute the 
- * Acquire Start command. if this command was successful, image acquisition started.
- * 
- * @return: status  -> error if no device, camera values not set, or execute command fails. Otherwise, success
+ * Function that spawns new acquisition thread, if able
  */
-asynStatus AD{{ cookiecutter.driver_name }}::acquireStart(){
+void AD{{ cookiecutter.driver_name }}::acquireStart(){
     const char* functionName = "acquireStart";
-    asynStatus status;
-    if(this->pcamera == NULL){
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Error: No camera connected\n", driverName, functionName);
-        status = asynError;
-    }
-    else{
+    
+    epicsThreadOpts opts;
+    opts.joinable = 
 
-        // Here, you need to start acquisition. Generally there are two setups for drivers. Either the vendor provides
-        // a function that starts acquisition and takes a callback function to process frames on a different thread,
-        // or you will need to create your own acquisition thread here. 
-
-        if(status != asynSuccess){
-            setIntegerParam(ADAcquire, 0);
-            setIntegerParam(ADStatus, ADStatusIdle);
-            callParamCallbacks();
-            status = asynError;
-        }
-        else{
-            setIntegerParam(ADStatus, ADStatusAcquire);
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Image acquistion start\n", driverName, functionName);
-            callParamCallbacks();
-        }
-
-    }
-    return status;
+    epicsThreadCreateOpts
 }
 
 
@@ -216,37 +85,29 @@ asynStatus AD{{ cookiecutter.driver_name }}::acquireStart(){
 asynStatus AD{{ cookiecutter.driver_name }}::acquireStop(){
     const char* functionName = "acquireStop";
     asynStatus status;
-    if(this->pcamera == NULL){
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Error: No camera connected\n", driverName, functionName);
-        status = asynError;
+    
+    this->acquiring = false;
+    if(this->acquisitionThreadId != NULL) {
+        epicsThreadMustJoin(this->acquisitionThreadId);
+        this->acquisitionThreadId = NULL;
     }
-    else{
-        // Here, you need to stop acquisition. If the vendor software spawned its own callback thread, you likely
-        // just need to call some stop acquisition function. If you created your own callback thread, you should join
-        // it here.
-    }
+
     setIntegerParam(ADStatus, ADStatusIdle);
     setIntegerParam(ADAcquire, 0);
     callParamCallbacks();
+    
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Stopping Image Acquisition\n", driverName, functionName);
     return status;
 }
 
-// Here, you will need three functions:
-// * A function for converting the images supplied by vendor software into areaDetector NDArrays
-// * A function that converts the data type and color mode of the vendor software supplied image structure into areaDetector NDDataType_t and NDColorMode_t
-// * A function for that takes a pointer to a vendor software image data structure (your callback function - runs once per image)
-// 
-// If the vendor software is expecting a static function pointer as the callback parameter, you can create a static function with a void pointer as an argument
-// cast that void pointer to type AD{{ cookiecutter.driver_name }}*, and call the callback function
 
+void AD{{ cookiecutter.driver_name }}::acquisitionThread(){
+    const char* functionName = "acquisitionThread";
 
-
-
-
-
-
-
+    this->acquiring = true;
+    while(this->acquiring){
+    }
+}
 
 
 //---------------------------------------------------------

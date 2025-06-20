@@ -3,20 +3,18 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-PROD_NAME = {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}App
+PROD_NAME = {{ cookiecutter.driver_name }}App
 PROD_IOC += $(PROD_NAME)
 
-# <name>.dbd will be created from <name>Include.dbd
 DBD += $(PROD_NAME).dbd
-$(PROD_NAME)_DBD += {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}Support.dbd
+$(PROD_NAME)_DBD += {{ cookiecutter.driver_name }}Support.dbd
 
-# <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 $(PROD_NAME)_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp $(PROD_NAME)Main.cpp
 
-# Add anything built by EPICS that will be statically linked (*.a libraries)
+# Add any libraries built by the EPICS build system here
 $(PROD_NAME)_LIBS += AD{{ cookiecutter.driver_name }}
 
-# Add any system libraries + anything that will be dynamically linked (*.so libraries)
+# Add any system libraries here
 $(PROD_NAME)_SYS_LIBS += 
 
 include $(ADCORE)/ADApp/commonDriverMakefile

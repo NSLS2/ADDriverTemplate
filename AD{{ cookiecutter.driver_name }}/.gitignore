@@ -1,4 +1,14 @@
 ~*
 *~
 .vscode/
-TemplateReadme.md
+*.swp
+O.*
+bin/
+lib/
+include/
+db/
+dbd/
+*.sav*
+envPaths
+dllPath.bat
+autorun.cmd
