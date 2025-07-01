@@ -56,6 +56,17 @@ static void exitCallbackC(void* pPvt){
 
 
 
+/**
+ * @brief Wrapper C function passed to epicsThreadCreate to create acquisition thread
+ *
+ * @param drvPvt Pointer to instance of AD{{ cookiecutter.driver_name }} driver object
+ */
+static void acquisitionThreadC(void *drvPvt) {
+    AD{{ cookiecutter.driver_name }} *pPvt = (AD{{ cookiecutter.driver_name }} *)drvPvt;
+    pPvt->acquisitionThread();
+}
+
+
 // -----------------------------------------------------------------------
 // AD{{ cookiecutter.driver_name }} Acquisition Functions
 // -----------------------------------------------------------------------
@@ -64,64 +75,145 @@ static void exitCallbackC(void* pPvt){
 /**
  * Function that spawns new acquisition thread, if able
  */
-void AD{{ cookiecutter.driver_name }}::acquireStart(){
-    const char* functionName = "acquireStart";
-    
-    epicsThreadOpts opts;
-    opts.joinable = 
+/**
+ * @brief Starts acquisition by spawning main acq thread
+ */
+void AD{{ cookiecutter.driver_name }}::acquireStart() {
+    const char *functionName = "acquireStart";
 
-    epicsThreadCreateOpts
+    // Spawn the acquisition thread. Make sure it's joinable.
+    INFO("Spawning main acquisition thread...");
+
+    epicsThreadOpts opts;
+    opts.priority = epicsThreadPriorityHigh;
+    opts.stackSize = epicsThreadGetStackSize(epicsThreadStackBig);
+    opts.joinable = 1;
+
+    this->acquisitionThreadId =
+        epicsThreadCreateOpt("acquisitionThread", (EPICSTHREADFUNC)acquisitionThreadC, this, &opts);
 }
 
 
-
-
 /**
- * Function responsible for stopping camera image acquisition. First check if the camera is connected.
- * If it is, execute the 'AcquireStop' command. Then set the appropriate PV values, and callParamCallbacks
- * 
- * @return: status  -> error if no camera or command fails to execute, success otherwise
- */ 
-asynStatus AD{{ cookiecutter.driver_name }}::acquireStop(){
-    const char* functionName = "acquireStop";
-    asynStatus status;
-    
-    this->acquiring = false;
-    if(this->acquisitionThreadId != NULL) {
-        epicsThreadMustJoin(this->acquisitionThreadId);
-        this->acquisitionThreadId = NULL;
+ * @brief Main acquisition function for ADKinetix
+ */
+void AD{{ cookiecutter.driver_name }}::acquisitionThread() {
+    const char *functionName = "acquisitionThread";
+
+    NDDataType_t dataType;
+    NDColorMode_t colorMode;
+    getIntegerParam(NDColorMode, (int *)&colorMode);
+    getIntegerParam(NDDataType, (int *)&dataType);
+
+    int ndims = 3; // For color
+    if (colorMode == NDColorMono)
+        ndims = 2; // For monochrome
+
+    int dims[ndims];
+    if(ndims == 2){
+        getIntegerParam(ADSizeX, &dims[0]);
+        getIntegerParam(ADSizeY, &dims[1]);
+    } else {
+        dims[0] = 3;
+        getIntegerParam(ADSizeX, &dims[1]);
+        getIntegerParam(ADSizeY, &dims[2]);
+    }
+
+    int collectedImages = 0;
+
+    // Start the acquisition given resolution, data type, color mode here
+    this->acquisitionActive = true;
+
+    while (acquisitionActive) {
+        setIntegerParam(ADStatus, ADStatusAcquire);
+
+        // Get a new frame using the vendor SDK here here
+
+        // Allocate the NDArray of the correct size
+        this->pArrays[0] = pNDArrayPool->alloc(ndims, dims, dataType, 0, NULL);
+        if (this->pArrays[0] != NULL) {
+            pArray = this->pArrays[0];
+        } else {
+            this->pArrays[0]->release();
+            ERR("Failed to allocate array!");
+            setIntegerParam(ADStatus, ADStatusError);
+            callParamCallbacks();
+            break;
+        }
+
+        collectedImages += 1;
+        setIntegerParam(ADNumImagesCounter, collectedImages);
+        updateTimeStamp(&pArray->epicsTS);
+
+        // Set array size PVs based on collected frame
+        pArray->getInfo(&arrayInfo);
+        setIntegerParam(NDArraySize, (int)arrayInfo.totalBytes);
+        setIntegerParam(NDArraySizeX, arrayInfo.xSize);
+        setIntegerParam(NDArraySizeY, arrayInfo.ySize);
+
+        // Copy data from new frame to pArray
+        memcpy(pArray->pData, POINTER_TO_FRAME_DATA, arrayInfo.totalBytes);
+
+        // increment the array counter
+        int arrayCounter;
+        getIntegerParam(NDArrayCounter, &arrayCounter);
+        arrayCounter++;
+        setIntegerParam(NDArrayCounter, arrayCounter);
+
+        // set the image unique ID to the number in the sequence
+        pArray->uniqueId = arrayCounter;
+        pArray->pAttributeList->add("ColorMode", "Color Mode", NDAttrInt32, &colorMode);
+
+        getAttributes(pArray->pAttributeList);
+        doCallbacksGenericPointer(pArray, NDArrayData, 0);
+
+        // If in single mode, finish acq, if in multiple mode and reached target number
+        // complete acquisition.
+        if (acquisitionMode == ADImageSingle) {
+            this->acquisitionActive = false;
+        } else if (acquisitionMode == ADImageMultiple && collectedImages == targetNumImages) {
+            this->acquisitionActive = false;
+        }
+        // Release the array
+        pArray->release();
+
+        // refresh all PVs
+        callParamCallbacks();
     }
 
     setIntegerParam(ADStatus, ADStatusIdle);
     setIntegerParam(ADAcquire, 0);
     callParamCallbacks();
-    
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Stopping Image Acquisition\n", driverName, functionName);
-    return status;
 }
 
 
-void AD{{ cookiecutter.driver_name }}::acquisitionThread(){
-    const char* functionName = "acquisitionThread";
+/**
+ * @brief stops acquisition by aborting exposure and joinging acq thread
+ */
+void AD{{ cookiecutter.driver_name }}::acquireStop() {
+    const char *functionName = "acquireStop";
 
-    this->acquiring = true;
-    while(this->acquiring){
+    if (this->acquisitionActive) {
+
+        // Mark acquisition as inactive
+        this->acquisitionActive = false;
+
+        // Wait for acquisition thread to join
+        INFO("Waiting for acquisition thread to join...");
+        epicsThreadMustJoin(this->acquisitionThreadId);
+        INFO("Acquisition stopped.");
+
+        // Refresh all PV values
+        callParamCallbacks();
+    } else {
+        WARN("Acquisition is not active!");
     }
 }
-
-
-//---------------------------------------------------------
-// Base {{ cookiecutter.driver_name }} Camera functionality
-//---------------------------------------------------------
-
-
-//  Add functions for getting/setting various camera settings (gain, exposure etc.) here
 
 
 //-------------------------------------------------------------------------
 // ADDriver function overwrites
 //-------------------------------------------------------------------------
-
 
 
 /*
@@ -143,11 +235,7 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeInt32(asynUser* pasynUser, epi
     // start/stop acquisition
     if(function == ADAcquire){
         if(value && !acquiring){
-            deviceStatus = acquireStart();
-            if(deviceStatus < 0){
-                report{{ cookiecutter.driver_name }}Error(deviceStatus, functionName);
-                return asynError;
-            }
+            acquireStart();
         }
         if(!value && acquiring){
             acquireStop();
@@ -165,10 +253,10 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeInt32(asynUser* pasynUser, epi
     callParamCallbacks();
 
     if(status){
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s ERROR status=%d, function=%d, value=%d\n", driverName, functionName, status, function, value);
+        ERR_ARGS("status=%d, function=%d, value=%d\n", status, function, value);
         return asynError;
     }
-    else asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s function=%d value=%d\n", driverName, functionName, function, value);
+    else DEBUG_ARGS("function=%d value=%d\n", function, value);
     return asynSuccess;
 }
 
@@ -185,7 +273,7 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeInt32(asynUser* pasynUser, epi
 asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
     int function = pasynUser->reason;
     int acquiring;
-    int status = asynSuccess;
+    asynStatus status = asynSuccess;
     static const char* functionName = "writeFloat64";
     getIntegerParam(ADAcquire, &acquiring);
 
@@ -202,13 +290,12 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, e
     callParamCallbacks();
 
     if(status){
-        asynPrint(this-> pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s ERROR status = %d, function =%d, value = %f\n", driverName, functionName, status, function, value);
+        ERR_ARGS("status=%d, function=%d, value=%f\n", status, function, value);
         return asynError;
     }
-    else asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s function=%d value=%f\n", driverName, functionName, function, value);
-    return asynSuccess;
+    else DEBUG_ARGS("function=%d value=%f\n", function, value);
+    return status;
 }
-
 
 
 /*
@@ -222,29 +309,10 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, e
  */
 void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details){
     const char* functionName = "report";
-    int height;
-    int width;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s reporting to external log file\n",driverName, functionName);
     if(details > 0){
-        if(!connected){
-            fprintf(fp, " No connected devices\n");
-            ADDriver::report(fp, details);
-            return;
-        }
-        fprintf(fp, " Connected Device Information\n");
-        // GET CAMERA INFORMATION HERE AND PRINT IT TO fp
-        getIntegerParam(ADSizeX, &width);
-        getIntegerParam(ADSizeY, &height);
-        fprintf(fp, " Image Width           ->      %d\n", width);
-        fprintf(fp, " Image Height          ->      %d\n", height);
-        fprintf(fp, " -------------------------------------------------------------------\n");
-        fprintf(fp, "\n");
-        
         ADDriver::report(fp, details);
     }
 }
-
-
 
 
 //----------------------------------------------------------------------------
@@ -252,8 +320,8 @@ void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details){
 //----------------------------------------------------------------------------
 
 
-AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* portName, const char* connectionParam, int maxbuffers, size_t maxMemory, int priority, int stackSize )
-    : ADDriver(portName, 1, (int)NUM_{{ cookiecutter.driver_name.upper() }}_PARAMS, maxBuffers, maxMemory, asynEnumMask, asynEnumMask, ASYN_CANBLOCK, 1, priority, stackSize){
+AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* portName, .....)
+    : ADDriver(portName, 1, (int)NUM_{{ cookiecutter.driver_name.upper() }}_PARAMS, 0, 0, 0, 0, 0, 1, 0, 0){
     static const char* functionName = "AD{{ cookiecutter.driver_name }}";
 
     // Call createParam here for all of your 
@@ -264,27 +332,36 @@ AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* p
     epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d", AD{{ cookiecutter.driver_name.upper() }}_VERSION, AD{{ cookiecutter.driver_name.upper() }}_REVISION, AD{{ cookiecutter.driver_name.upper() }}_MODIFICATION);
     setStringParam(NDDriverVersion, versionString);
 
-    if(strlen(connectionParam) < 0){
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Connection failed, abort\n", driverName, functionName);
-    }
-    else{
-        connected = connectToDevice{{ cookiecutter.driver_name }}(serial);
-        if(connected){
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Acquiring device information\n", driverName, functionName);
-            getDeviceInformation();
-        }
-    }
+    // Initialzie vendor SDK and connect to the device here
 
-     // when epics is exited, delete the instance of this class
+    // Retrieve device information and populate all PVs.
+    setStringParam(ADManufacturer, ....);
+    setStringParam(ADModel, ....);
+    setStringParam(ADSerialNumber, ....);
+    setStringParam(ADFirmwareVersion, ....);
+    setStringParam(ADSDKVersion, ....);
+    setIntegerParam(ADMaxSizeX, ....);
+    setIntegerParam(ADMaxSizeY, ....);
+
+    setIntegerParam(ADMinX, 0);
+    setIntegerParam(ADMinY, 0);
+
+
+    callParamCallbacks();
+
+    // when epics is exited, delete the instance of this class
     epicsAtExit(exitCallbackC, this);
 }
 
 
 AD{{ cookiecutter.driver_name }}::~AD{{ cookiecutter.driver_name }}(){
     const char* functionName = "~AD{{ cookiecutter.driver_name }}";
-    disconnectFromDevice{{ cookiecutter.driver_name }}();
-    asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER,"%s::%s AD{{ cookiecutter.driver_name }}\n", driverName, functionName);
-    disconnect(this->pasynUserSelf);
+
+    INFO("Shutting down AD{{ cookiecutter.driver_name }} driver...");
+    if(this->acquisitionActive && this->acquisitionThreadId != NULL) acquireStop();
+
+    // Destroy any resources allocated by the vendor SDK here
+    INFO("Done.");
 }
 
 
@@ -298,26 +375,20 @@ static const iocshArg {{ cookiecutter.driver_name }}ConfigArg0 = { "Port name", 
 // This parameter must be customized by the driver author. Generally a URL, Serial Number, ID, IP are used to connect.
 static const iocshArg {{ cookiecutter.driver_name }}ConfigArg1 = { "Connection Param", iocshArgString };
 
-static const iocshArg {{ cookiecutter.driver_name }}ConfigArg2 = { "maxBuffers",       iocshArgInt };
-static const iocshArg {{ cookiecutter.driver_name }}ConfigArg3 = { "maxMemory",        iocshArgInt };
-static const iocshArg {{ cookiecutter.driver_name }}ConfigArg4 = { "priority",         iocshArgInt };
-static const iocshArg {{ cookiecutter.driver_name }}ConfigArg5 = { "stackSize",        iocshArgInt };
-
 
 /* Array of config args */
 static const iocshArg * const {{ cookiecutter.driver_name }}ConfigArgs[] =
-        { &{{ cookiecutter.driver_name }}ConfigArg0, &{{ cookiecutter.driver_name }}ConfigArg1, &{{ cookiecutter.driver_name }}ConfigArg2,
-        &{{ cookiecutter.driver_name }}ConfigArg3, &{{ cookiecutter.driver_name }}ConfigArg4, &{{ cookiecutter.driver_name }}ConfigArg5 };
+        { &{{ cookiecutter.driver_name }}ConfigArg0, &{{ cookiecutter.driver_name }}ConfigArg1 };
 
 
 /* what function to call at config */
 static void config{{ cookiecutter.driver_name }}CallFunc(const iocshArgBuf *args) {
-    AD{{ cookiecutter.driver_name }}Config(args[0].sval, args[1].sval, args[2].ival, args[3].ival, args[4].ival, args[5].ival);
+    AD{{ cookiecutter.driver_name }}Config(args[0].sval, args[1].sval);
 }
 
 
 /* information about the configuration function */
-static const iocshFuncDef configUVC = { "AD{{ cookiecutter.driver_name }}Config", 5, {{ cookiecutter.driver_name }}ConfigArgs };
+static const iocshFuncDef configUVC = { "AD{{ cookiecutter.driver_name }}Config", 2, {{ cookiecutter.driver_name }}ConfigArgs };
 
 
 /* IOC register function */

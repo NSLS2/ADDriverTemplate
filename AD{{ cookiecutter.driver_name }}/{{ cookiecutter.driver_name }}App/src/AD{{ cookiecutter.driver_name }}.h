@@ -58,7 +58,6 @@
 // #define AD{{ cookiecutter.driver_name }}_PVNameString          "PV_NAME"            //asynInt32
 
 
-
 #include "ADDriver.h"
 
 /*
@@ -89,8 +88,12 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
 
     private:
 
-        asynStatus acquireStart();
+        bool acquisitionActive; // Flag to indicate if acquisition is active
+        epicsThreadId acquisitionThreadId;
+
+        void acquireStart();
         void acquireStop();
+        void acquisitionThread();
 
 };
 
