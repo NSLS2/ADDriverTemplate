@@ -320,8 +320,8 @@ void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details){
 //----------------------------------------------------------------------------
 
 
-AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* portName, .....)
-    : ADDriver(portName, 1, (int)NUM_{{ cookiecutter.driver_name.upper() }}_PARAMS, 0, 0, 0, 0, 0, 1, 0, 0){
+AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* portName, .....) // TODO
+    : ADDriver(portName, 1, 0, 0, 0, 0, 0, 1, 0, 0){
     static const char* functionName = "AD{{ cookiecutter.driver_name }}";
 
     // Call createParam here for all of your 

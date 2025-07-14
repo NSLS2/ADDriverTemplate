@@ -81,10 +81,8 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
 
     protected:
 
-        // Add PV indexes here. You must also define the first/last index as you add them.
+        // Add parameter library index variables here:
         // Ex: int AD{{ cookiecutter.driver_name }}_PVName;
-        #define AD{{ cookiecutter.driver_name.upper() }}_FIRST_PARAM ......
-        #define AD{{ cookiecutter.driver_name.upper() }}_LAST_PARAM ......
 
     private:
 
@@ -97,7 +95,5 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
 
 };
 
-// Stores number of additional PV parameters are added by the driver
-#define NUM_{{ cookiecutter.driver_name.upper() }}_PARAMS ((int)(&AD{{ cookiecutter.driver_name.upper() }}_LAST_PARAM - &AD{{ cookiecutter.driver_name.upper() }}_FIRST_PARAM + 1))
 
 #endif
