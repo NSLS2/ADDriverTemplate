@@ -278,7 +278,6 @@ void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details) {
 // AD{{ cookiecutter.driver_name }} Constructor/Destructor
 //----------------------------------------------------------------------------
 
-
 AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* portName, .....)
     : ADDriver(portName, 1, 0, 0, 0, 0, 0, 1, 0, 0) {
     const char* functionName = "AD{{ cookiecutter.driver_name }}";
