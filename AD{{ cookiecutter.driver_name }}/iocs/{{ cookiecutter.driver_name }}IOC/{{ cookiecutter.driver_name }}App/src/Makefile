@@ -15,7 +15,7 @@ $(PROD_NAME)_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp $(PROD_NAME)Mai
 $(PROD_NAME)_LIBS += AD{{ cookiecutter.driver_name }}
 
 # Add any system libraries here
-$(PROD_NAME)_SYS_LIBS += 
+$(PROD_NAME)_SYS_LIBS +=
 
 include $(ADCORE)/ADApp/commonDriverMakefile
 
