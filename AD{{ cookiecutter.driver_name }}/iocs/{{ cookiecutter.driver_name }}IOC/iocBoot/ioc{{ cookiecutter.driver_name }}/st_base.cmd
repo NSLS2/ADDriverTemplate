@@ -20,7 +20,7 @@ epicsEnvSet("NDFTVL",                   "SHORT") #'UCHAR' (8bit B/W, Color) | 'S
 epicsEnvSet("CBUFFS",                   "500")
 
 dbLoadDatabase("$(AD{{ cookiecutter.driver_name }})/iocs/{{ cookiecutter.driver_name }}IOC/dbd/{{ cookiecutter.driver_name }}App.dbd")
-{{ cookiecutter.driver_name }}App_registerRecordDeviceDriver(pdbbase) 
+{{ cookiecutter.driver_name }}App_registerRecordDeviceDriver(pdbbase)
 
 # Create instance of AD{{ cookiecutter.driver_name }} driver
 AD{{ cookiecutter.driver_name }}Config(const char* portName, ....)

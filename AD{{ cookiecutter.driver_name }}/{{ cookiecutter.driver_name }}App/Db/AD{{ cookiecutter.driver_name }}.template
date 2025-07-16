@@ -1,20 +1,36 @@
-# Author: 
+# Author: {{ cookiecutter.author }}
+# Copyright: {{ cookiecutter.institution }} - {% now 'local', '%Y' %}
 
-##################################################################
-# Define all of your PV records here in the following form:
-#
-# record(RECORD_TYPE, "$(P)$(R)PVName"){
-#   field(DTYP, "data type")
-#   field(INP/OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PV_NAME")
-#   field(VAL, "value")
-#   field(SCAN, "I/O Intr")
-# }
-#
-# Consult other .template files for guides on how to write specific PVs
-#
-# The PV_NAME at the end of the INP or OUT field of the record is the 
-# PVString defined in AD{{ cookiecutter.driver_name }}.h.
-#
-# example: #define AD{{ cookiecutter.driver_name }} "PV_NAME"
-#
-##################################################################
+record(mbbo, "$(P)$(R)LogLevel") {
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT)){{ cookiecutter.driver_name.upper() }}_LOG_LEVEL")
+    field(ZRVL, "0")
+    field(ONVL, "10")
+    field(TWVL, "20")
+    field(THVL, "30")
+    field(FRVL, "40")
+    field(ZRST, "None")
+    field(ONST, "Error")
+    field(TWST, "Warning")
+    field(THST, "Info")
+    field(FRST, "Debug")
+    field(VAL, "30")
+    field(PINI, "YES")
+}
+
+record(mbbi, "$(P)$(R)LogLevel_RBV") {
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT)){{ cookiecutter.driver_name.upper() }}_LOG_LEVEL")
+    field(ZRVL, "0")
+    field(ONVL, "10")
+    field(TWVL, "20")
+    field(THVL, "30")
+    field(FRVL, "40")
+    field(ZRST, "None")
+    field(ONST, "Error")
+    field(TWST, "Warning")
+    field(THST, "Info")
+    field(FRST, "Debug")
+    field(VAL, "30")
+    field(SCAN, "I/O Intr")
+}

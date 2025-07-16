@@ -1,28 +1,27 @@
 /**
- * Main source file for the AD{{ cookiecutter.driver_name }} EPICS driver 
- * 
+ * Main source file for the ADMyNewDriver EPICS driver
+ *
  * This file was initially generated with the help of the ADDriverTemplate:
- * https://github.com/NSLS2/ADDriverTemplate on {% now 'local', '%d/%m/%Y' %}
- * 
- * Author: {{ cookiecutter.author }}
- * 
- * Copyright (c) : {{ cookiecutter.institution }}, {% now 'local', '%Y' %}
- * 
+ * https://github.com/NSLS2/ADDriverTemplate on 16/07/2025
+ *
+ * Author: John Smith
+ *
+ * Copyright (c) : Brookhaven National Laboratory, 2025
+ *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "ADMyNewDriver.h"
 
-#include <epicsTime.h>
-#include <epicsThread.h>
 #include <epicsExit.h>
-#include <epicsString.h>
-#include <epicsStdio.h>
-#include <iocsh.h>
 #include <epicsExport.h>
-
-#include "AD{{ cookiecutter.driver_name }}.h"
+#include <epicsStdio.h>
+#include <epicsString.h>
+#include <epicsThread.h>
+#include <epicsTime.h>
+#include <iocsh.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 using namespace std;
 
@@ -31,41 +30,28 @@ const char* driverName = "AD{{ cookiecutter.driver_name }}";
 /*
  * External configuration function for AD{{ cookiecutter.driver_name }}.
  * Envokes the constructor to create a new AD{{ cookiecutter.driver_name }} object
- * This is the function that initializes the driver, and is called in the IOC startup script
- *
- * @params[in]: all passed into constructor
- * @return:     status
  */
-extern "C" int AD{{ cookiecutter.driver_name }}Config(const char* portName, .....){
+extern "C" int AD{{ cookiecutter.driver_name }}Config(const char* portName, .....) {
     new AD{{ cookiecutter.driver_name }}(portName, ......);
-    return(asynSuccess);
+    return asynSuccess;
 }
-
 
 /*
  * Callback function fired when IOC is terminated.
  * Deletes the driver object and performs cleanup
- *
- * @params[in]: pPvt -> pointer to the driver object created in AD{{ cookiecutter.driver_name }}Config
- * @return:     void
  */
-static void exitCallbackC(void* pPvt){
+static void exitCallbackC(void* pPvt) {
     AD{{ cookiecutter.driver_name }}* p{{ cookiecutter.driver_name }} = (AD{{ cookiecutter.driver_name }}*) pPvt;
-    delete(p{{ cookiecutter.driver_name }});
+    delete p{{ cookiecutter.driver_name }};
 }
-
-
 
 /**
- * @brief Wrapper C function passed to epicsThreadCreate to create acquisition thread
- *
- * @param drvPvt Pointer to instance of AD{{ cookiecutter.driver_name }} driver object
+ * Wrapper C function passed to epicsThreadCreate to create acquisition thread
  */
-static void acquisitionThreadC(void *drvPvt) {
-    AD{{ cookiecutter.driver_name }} *pPvt = (AD{{ cookiecutter.driver_name }} *)drvPvt;
+static void acquisitionThreadC(void* drvPvt) {
+    AD{{ cookiecutter.driver_name }}* pPvt = (AD{{ cookiecutter.driver_name }}*) drvPvt;
     pPvt->acquisitionThread();
 }
-
 
 // -----------------------------------------------------------------------
 // AD{{ cookiecutter.driver_name }} Acquisition Functions
@@ -73,13 +59,10 @@ static void acquisitionThreadC(void *drvPvt) {
 
 
 /**
- * Function that spawns new acquisition thread, if able
- */
-/**
- * @brief Starts acquisition by spawning main acq thread
+ * Spawns the main acquisition thread
  */
 void AD{{ cookiecutter.driver_name }}::acquireStart() {
-    const char *functionName = "acquireStart";
+    const char* functionName = "acquireStart";
 
     // Spawn the acquisition thread. Make sure it's joinable.
     INFO("Spawning main acquisition thread...");
@@ -89,28 +72,28 @@ void AD{{ cookiecutter.driver_name }}::acquireStart() {
     opts.stackSize = epicsThreadGetStackSize(epicsThreadStackBig);
     opts.joinable = 1;
 
-    this->acquisitionThreadId =
-        epicsThreadCreateOpt("acquisitionThread", (EPICSTHREADFUNC)acquisitionThreadC, this, &opts);
+    this->acquisitionThreadId = epicsThreadCreateOpt(
+        "acquisitionThread", (EPICSTHREADFUNC)acquisitionThreadC, this, &opts);
 }
 
-
 /**
- * @brief Main acquisition function for ADKinetix
+ * Main acquisition loop function.
+ * Ran on a dedicated thread, spawend by acquireStart().
  */
 void AD{{ cookiecutter.driver_name }}::acquisitionThread() {
-    const char *functionName = "acquisitionThread";
+    const char* functionName = "acquisitionThread";
 
     NDDataType_t dataType;
     NDColorMode_t colorMode;
-    getIntegerParam(NDColorMode, (int *)&colorMode);
-    getIntegerParam(NDDataType, (int *)&dataType);
+    getIntegerParam(NDColorMode, (int*) &colorMode);
+    getIntegerParam(NDDataType, (int*) &dataType);
 
-    int ndims = 3; // For color
-    if (colorMode == NDColorMono)
-        ndims = 2; // For monochrome
+    // Determine dimensions depending on color vs. monochrome
+    int ndims = 3;
+    if (colorMode == NDColorMono) ndims = 2;
 
     int dims[ndims];
-    if(ndims == 2){
+    if(ndims == 2) {
         getIntegerParam(ADSizeX, &dims[0]);
         getIntegerParam(ADSizeY, &dims[1]);
     } else {
@@ -147,7 +130,7 @@ void AD{{ cookiecutter.driver_name }}::acquisitionThread() {
 
         // Set array size PVs based on collected frame
         pArray->getInfo(&arrayInfo);
-        setIntegerParam(NDArraySize, (int)arrayInfo.totalBytes);
+        setIntegerParam(NDArraySize, (int) arrayInfo.totalBytes);
         setIntegerParam(NDArraySizeX, arrayInfo.xSize);
         setIntegerParam(NDArraySizeY, arrayInfo.ySize);
 
@@ -186,15 +169,13 @@ void AD{{ cookiecutter.driver_name }}::acquisitionThread() {
     callParamCallbacks();
 }
 
-
 /**
- * @brief stops acquisition by aborting exposure and joinging acq thread
+ * Aborts acquisition, and waits for the acquisition thread to join.
  */
 void AD{{ cookiecutter.driver_name }}::acquireStop() {
-    const char *functionName = "acquireStop";
+    const char* functionName = "acquireStop";
 
     if (this->acquisitionActive) {
-
         // Mark acquisition as inactive
         this->acquisitionActive = false;
 
@@ -210,110 +191,88 @@ void AD{{ cookiecutter.driver_name }}::acquireStop() {
     }
 }
 
-
 //-------------------------------------------------------------------------
 // ADDriver function overwrites
 //-------------------------------------------------------------------------
 
-
 /*
- * Function overwriting ADDriver base function.
- * Takes in a function (PV) changes, and a value it is changing to, and processes the input
- *
- * @params[in]: pasynUser       -> asyn client who requests a write
- * @params[in]: value           -> int32 value to write
- * @return: asynStatus      -> success if write was successful, else failure
+ * Callback function fired when integer parameters are written to.
  */
-asynStatus AD{{ cookiecutter.driver_name }}::writeInt32(asynUser* pasynUser, epicsInt32 value){
+asynStatus AD{{ cookiecutter.driver_name }}::writeInt32(asynUser* pasynUser, epicsInt32 value) {
+    const char* functionName = "writeInt32";
     int function = pasynUser->reason;
-    int acquiring;
     int status = asynSuccess;
-    static const char* functionName = "writeInt32";
+
+    int acquiring;
     getIntegerParam(ADAcquire, &acquiring);
 
     status = setIntegerParam(function, value);
-    // start/stop acquisition
-    if(function == ADAcquire){
-        if(value && !acquiring){
+
+    if (function == ADAcquire) {
+        if (value && !acquiring) {
             acquireStart();
-        }
-        if(!value && acquiring){
+        } else if (!value && acquiring) {
             acquireStop();
         }
+    } else if (function == ADImageMode) {
+        if (acquiring == 1) acquireStop();
+    } else if (function == AD{{ cookiecutter.driver_name }}_LogLevel) {
+        this->logLevel = (AD{{ cookiecutter.driver_name }}_LogLevel_t) value;
+    } else {
+        status = ADDriver::writeInt32(pasynUser, value);
     }
 
-    else if(function == ADImageMode)
-        if(acquiring == 1) acquireStop();
-
-    else{
-        if (function < AD{{ cookiecutter.driver_name.upper() }}_FIRST_PARAM) {
-            status = ADDriver::writeInt32(pasynUser, value);
-        }
-    }
     callParamCallbacks();
 
-    if(status){
+    if (status) {
         ERR_ARGS("status=%d, function=%d, value=%d\n", status, function, value);
         return asynError;
+    } else {
+        DEBUG_ARGS("function=%d value=%d\n", function, value);
     }
-    else DEBUG_ARGS("function=%d value=%d\n", function, value);
     return asynSuccess;
 }
 
-
 /*
- * Function overwriting ADDriver base function.
- * Takes in a function (PV) changes, and a value it is changing to, and processes the input
- * This is the same functionality as writeInt32, but for processing doubles.
- *
- * @params[in]: pasynUser       -> asyn client who requests a write
- * @params[in]: value           -> int32 value to write
- * @return: asynStatus      -> success if write was successful, else failure
+ * Callback function fired when float parameters are written to.
  */
-asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
+asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, epicsFloat64 value) {
+    const char* functionName = "writeFloat64";
+
     int function = pasynUser->reason;
-    int acquiring;
     asynStatus status = asynSuccess;
-    static const char* functionName = "writeFloat64";
+
+    int acquiring;
     getIntegerParam(ADAcquire, &acquiring);
 
     status = setDoubleParam(function, value);
 
-    if(function == ADAcquireTime){
-        if(acquiring) acquireStop();
+    if (function == ADAcquireTime && acquiring) {
+        acquireStop();
+    } else {
+        status = ADDriver::writeFloat64(pasynUser, value);
     }
-    else{
-        if(function < AD{{ cookiecutter.driver_name }}_FIRST_PARAM){
-            status = ADDriver::writeFloat64(pasynUser, value);
-        }
-    }
+
     callParamCallbacks();
 
-    if(status){
+    if (status) {
         ERR_ARGS("status=%d, function=%d, value=%f\n", status, function, value);
         return asynError;
+    } else {
+        DEBUG_ARGS("function=%d value=%f\n", function, value);
     }
-    else DEBUG_ARGS("function=%d value=%f\n", function, value);
     return status;
 }
 
-
 /*
- * Function used for reporting ADUVC device and library information to a external
- * log file. The function first prints all libuvc specific information to the file,
- * then continues on to the base ADDriver 'report' function
- * 
- * @params[in]: fp      -> pointer to log file
- * @params[in]: details -> number of details to write to the file
- * @return: void
+ * Function called when an asynReport is requested on the driver's port.
  */
-void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details){
+void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details) {
     const char* functionName = "report";
-    if(details > 0){
+    if (details > 0) {
         ADDriver::report(fp, details);
     }
 }
-
 
 //----------------------------------------------------------------------------
 // AD{{ cookiecutter.driver_name }} Constructor/Destructor
@@ -321,20 +280,23 @@ void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details){
 
 
 AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* portName, .....)
-    : ADDriver(portName, 1, (int)NUM_{{ cookiecutter.driver_name.upper() }}_PARAMS, 0, 0, 0, 0, 0, 1, 0, 0){
-    static const char* functionName = "AD{{ cookiecutter.driver_name }}";
+    : ADDriver(portName, 1, 0, 0, 0, 0, 0, 1, 0, 0) {
+    const char* functionName = "AD{{ cookiecutter.driver_name }}";
 
-    // Call createParam here for all of your 
-    // ex. createParam(ADUVC_UVCComplianceLevelString, asynParamInt32, &ADUVC_UVCComplianceLevel);
+    // Make all createParam calls here
+    createParam(AD{{ cookiecutter.driver_name }}_LogLevelString, asynParamInt32, &AD{{ cookiecutter.driver_name }}_LogLevel);
 
-    // Sets driver version PV (version numbers defined in header file) 
+    // Sets driver version PV (version numbers defined in header file)
     char versionString[25];
-    epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d", AD{{ cookiecutter.driver_name.upper() }}_VERSION, AD{{ cookiecutter.driver_name.upper() }}_REVISION, AD{{ cookiecutter.driver_name.upper() }}_MODIFICATION);
+    epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d", AD{{ cookiecutter.driver_name.upper() }}_VERSION, 
+                  AD{{ cookiecutter.driver_name.upper() }}_REVISION, AD{{ cookiecutter.driver_name.upper() }}_MODIFICATION);
     setStringParam(NDDriverVersion, versionString);
 
-    // Initialzie vendor SDK and connect to the device here
+    // Initialize vendor SDK and connect to the device here
+    // TODO
 
-    // Retrieve device information and populate all PVs.
+    // Retrieve SDK and device information like manufacturer, model, serial number,
+    // firmware version, etc, and set the corresponding parameters
     setStringParam(ADManufacturer, ....);
     setStringParam(ADModel, ....);
     setStringParam(ADSerialNumber, ....);
@@ -343,22 +305,18 @@ AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* p
     setIntegerParam(ADMaxSizeX, ....);
     setIntegerParam(ADMaxSizeY, ....);
 
-    setIntegerParam(ADMinX, 0);
-    setIntegerParam(ADMinY, 0);
-
-
     callParamCallbacks();
 
-    // when epics is exited, delete the instance of this class
+    // Register an exit callback, so driver object is deleted when IOC is exited,
+    // to allow for cleanup and resource deallocation
     epicsAtExit(exitCallbackC, this);
 }
 
-
-AD{{ cookiecutter.driver_name }}::~AD{{ cookiecutter.driver_name }}(){
+AD{{ cookiecutter.driver_name }}::~AD{{ cookiecutter.driver_name }}() {
     const char* functionName = "~AD{{ cookiecutter.driver_name }}";
 
     INFO("Shutting down AD{{ cookiecutter.driver_name }} driver...");
-    if(this->acquisitionActive && this->acquisitionThreadId != NULL) acquireStop();
+    if (this->acquisitionActive && this->acquisitionThreadId != NULL) acquireStop();
 
     // Destroy any resources allocated by the vendor SDK here
     INFO("Done.");
@@ -369,35 +327,32 @@ AD{{ cookiecutter.driver_name }}::~AD{{ cookiecutter.driver_name }}(){
 // AD{{ cookiecutter.driver_name }} ioc shell registration
 //-------------------------------------------------------------
 
-/* {{ cookiecutter.driver_name }}Config -> These are the args passed to the constructor in the epics config function */
-static const iocshArg {{ cookiecutter.driver_name }}ConfigArg0 = { "Port name",        iocshArgString };
-
-// This parameter must be customized by the driver author. Generally a URL, Serial Number, ID, IP are used to connect.
-static const iocshArg {{ cookiecutter.driver_name }}ConfigArg1 = { "Connection Param", iocshArgString };
-
-
-/* Array of config args */
-static const iocshArg * const {{ cookiecutter.driver_name }}ConfigArgs[] =
-        { &{{ cookiecutter.driver_name }}ConfigArg0, &{{ cookiecutter.driver_name }}ConfigArg1 };
+// Define argument types and names for the configuration function
+// The first argument is always the asyn port name. The second is generally whatever is needed
+// to uniquely identify the device, such as serial number, IP address, etc.
+static const iocshArg {{ cookiecutter.driver_name }}ConfigArg0 = {"Port name", iocshArgString};
+static const iocshArg {{ cookiecutter.driver_name }}ConfigArg1 = {"Serial number", iocshArgString};
 
 
-/* what function to call at config */
-static void config{{ cookiecutter.driver_name }}CallFunc(const iocshArgBuf *args) {
+// Place the args into an array
+static const iocshArg* const {{ cookiecutter.driver_name }}ConfigArgs[] = {&{{ cookiecutter.driver_name }}ConfigArg0,
+                                                                           &{{ cookiecutter.driver_name }}ConfigArg1};
+
+// Specify the C function to call when the equivalent iocsh command is run
+static void config{{ cookiecutter.driver_name }}CallFunc(const iocshArgBuf* args) {
     AD{{ cookiecutter.driver_name }}Config(args[0].sval, args[1].sval);
 }
 
+// Specify the iocsh function signature
+static const iocshFuncDef config{{ cookiecutter.driver_name }} = {"AD{{ cookiecutter.driver_name }}Config", 2, {{ cookiecutter.driver_name }}ConfigArgs};
 
-/* information about the configuration function */
-static const iocshFuncDef configUVC = { "AD{{ cookiecutter.driver_name }}Config", 2, {{ cookiecutter.driver_name }}ConfigArgs };
 
-
-/* IOC register function */
+// Static function that registers the command with the ioc shell
 static void {{ cookiecutter.driver_name }}Register(void) {
     iocshRegister(&config{{ cookiecutter.driver_name }}, config{{ cookiecutter.driver_name }}CallFunc);
 }
 
-
-/* external function for IOC register */
+// Export the registration function
 extern "C" {
-    epicsExportRegistrar({{ cookiecutter.driver_name }}Register);
+epicsExportRegistrar({{ cookiecutter.driver_name }}Register);
 }
