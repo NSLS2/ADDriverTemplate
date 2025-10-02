@@ -1,5 +1,6 @@
 {
     "author": "John Smith",
     "driver_name": "MyNewDriver",
+    "github_org": "NSLS2",
     "institution": "Brookhaven National Laboratory"
 }

@@ -36,8 +36,8 @@ const char* driverName = "AD{{ cookiecutter.driver_name }}";
  * @params[in]: all passed into constructor
  * @return:     status
  */
-extern "C" int AD{{ cookiecutter.driver_name }}Config(const char* portName, .....){
-    new AD{{ cookiecutter.driver_name }}(portName, ......);
+extern "C" int AD{{ cookiecutter.driver_name }}Config(const char* portName, const char* connectionParam){
+    new AD{{ cookiecutter.driver_name }}(portName, connectionParam);
     return(asynSuccess);
 }
 
@@ -206,7 +206,7 @@ void AD{{ cookiecutter.driver_name }}::acquireStop() {
         // Refresh all PV values
         callParamCallbacks();
     } else {
-        WARN("Acquisition is not active!");
+        WARN_TO_STATUS("Acquisition is not active!");
     }
 }
 
@@ -231,7 +231,6 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeInt32(asynUser* pasynUser, epi
     static const char* functionName = "writeInt32";
     getIntegerParam(ADAcquire, &acquiring);
 
-    status = setIntegerParam(function, value);
     // start/stop acquisition
     if(function == ADAcquire){
         if(value && !acquiring){
@@ -240,12 +239,12 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeInt32(asynUser* pasynUser, epi
         if(!value && acquiring){
             acquireStop();
         }
-    }
-
-    else if(function == ADImageMode)
+    } else if(function == ADImageMode) {
         if(acquiring == 1) acquireStop();
-
-    else{
+    } else if(function == AD{{ cookiecutter.driver_name }}_LogLevel) {
+        this-> logLevel = (AD{{ cookiecutter.driver_name }}_LogLevel_t) value;
+        INFO_ARGS("Log level set to %d", this->logLevel);
+    } else {
         if (function < AD{{ cookiecutter.driver_name.upper() }}_FIRST_PARAM) {
             status = ADDriver::writeInt32(pasynUser, value);
         }
@@ -277,12 +276,9 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, e
     static const char* functionName = "writeFloat64";
     getIntegerParam(ADAcquire, &acquiring);
 
-    status = setDoubleParam(function, value);
-
     if(function == ADAcquireTime){
         if(acquiring) acquireStop();
-    }
-    else{
+    } else{
         if(function < AD{{ cookiecutter.driver_name }}_FIRST_PARAM){
             status = ADDriver::writeFloat64(pasynUser, value);
         }
@@ -298,15 +294,6 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, e
 }
 
 
-/*
- * Function used for reporting ADUVC device and library information to a external
- * log file. The function first prints all libuvc specific information to the file,
- * then continues on to the base ADDriver 'report' function
- * 
- * @params[in]: fp      -> pointer to log file
- * @params[in]: details -> number of details to write to the file
- * @return: void
- */
 void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details){
     const char* functionName = "report";
     if(details > 0){
@@ -324,27 +311,26 @@ AD{{ cookiecutter.driver_name }}::AD{{ cookiecutter.driver_name }}(const char* p
     : ADDriver(portName, 1, (int)NUM_{{ cookiecutter.driver_name.upper() }}_PARAMS, 0, 0, 0, 0, 0, 1, 0, 0){
     static const char* functionName = "AD{{ cookiecutter.driver_name }}";
 
-    // Call createParam here for all of your 
-    // ex. createParam(ADUVC_UVCComplianceLevelString, asynParamInt32, &ADUVC_UVCComplianceLevel);
+    this->createAllParams();
 
     // Sets driver version PV (version numbers defined in header file) 
     char versionString[25];
     epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d", AD{{ cookiecutter.driver_name.upper() }}_VERSION, AD{{ cookiecutter.driver_name.upper() }}_REVISION, AD{{ cookiecutter.driver_name.upper() }}_MODIFICATION);
     setStringParam(NDDriverVersion, versionString);
 
-    // Initialzie vendor SDK and connect to the device here
+    // Initialize vendor SDK and connect to the device here
 
     // Retrieve device information and populate all PVs.
-    setStringParam(ADManufacturer, ....);
-    setStringParam(ADModel, ....);
-    setStringParam(ADSerialNumber, ....);
-    setStringParam(ADFirmwareVersion, ....);
-    setStringParam(ADSDKVersion, ....);
-    setIntegerParam(ADMaxSizeX, ....);
-    setIntegerParam(ADMaxSizeY, ....);
+    // setStringParam(ADManufacturer, ....);
+    // setStringParam(ADModel, ....);
+    // setStringParam(ADSerialNumber, ....);
+    // setStringParam(ADFirmwareVersion, ....);
+    // setStringParam(ADSDKVersion, ....);
+    // setIntegerParam(ADMaxSizeX, ....);
+    // setIntegerParam(ADMaxSizeY, ....);
 
-    setIntegerParam(ADMinX, 0);
-    setIntegerParam(ADMinY, 0);
+    // setIntegerParam(ADMinX, 0);
+    // setIntegerParam(ADMinY, 0);
 
 
     callParamCallbacks();
@@ -388,7 +374,7 @@ static void config{{ cookiecutter.driver_name }}CallFunc(const iocshArgBuf *args
 
 
 /* information about the configuration function */
-static const iocshFuncDef configUVC = { "AD{{ cookiecutter.driver_name }}Config", 2, {{ cookiecutter.driver_name }}ConfigArgs };
+static const iocshFuncDef config{{ cookiecutter.driver_name }} = { "AD{{ cookiecutter.driver_name }}Config", 2, {{ cookiecutter.driver_name }}ConfigArgs };
 
 
 /* IOC register function */

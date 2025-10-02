@@ -12,3 +12,5 @@ dbd/
 envPaths
 dllPath.bat
 autorun.cmd
+venv/
+.iocsh_history*
