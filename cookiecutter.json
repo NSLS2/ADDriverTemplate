@@ -5,9 +5,9 @@
     "github_org": "NSLS2",
     "institution": "Brookhaven National Laboratory",
     "_copy_without_render": [
-        "*cpr",
-        "*json",
-        "*magic_enum",
-        "*gtest"
+        "AD{{ cookiecutter.driver_name }}/{{ cookiecutter.driver_name }}Support/cpr/*",
+        "AD{{ cookiecutter.driver_name }}/{{ cookiecutter.driver_name }}Support/json/*",
+        "AD{{ cookiecutter.driver_name }}/{{ cookiecutter.driver_name }}Support/magic_enum/*",
+        "AD{{ cookiecutter.driver_name }}/{{ cookiecutter.driver_name }}Support/gtest/*"
     ]
 }
