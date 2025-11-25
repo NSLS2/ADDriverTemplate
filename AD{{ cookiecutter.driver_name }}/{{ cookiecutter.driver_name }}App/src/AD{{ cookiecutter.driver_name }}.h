@@ -29,93 +29,68 @@ typedef enum AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL {
 
 
 // Error message formatters
-#define ERR(msg)                                  \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_ERROR) \
-        printf("ERROR | %s::%s: %s\n", driverName, functionName, msg);
+#define ERR(msg)                                      \
+    if (this->getLogLevel() >= ADXSPDLogLevel::ERROR) \
+        fprintf(stderr, "ERROR | %s::%s: %s\n", driverName, __func__, msg);
 
-#define ERR_ARGS(fmt, ...)                        \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_ERROR) \
-        printf("ERROR | %s::%s: " fmt "\n", driverName, functionName, __VA_ARGS__);
+#define ERR_ARGS(fmt, ...)                            \
+    if (this->getLogLevel() >= ADXSPDLogLevel::ERROR) \
+        fprintf(stderr, "ERROR | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
-#define ERR_TO_STATUS(msg)                                             \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_ERROR) {                    \
-        printf("ERROR | %s::%s: %s\n", driverName, functionName, msg); \
-        setStringParam(ADStatusMessage, msg);                          \
-        setIntegerParam(ADStatus, ADStatusError);                      \
-        callParamCallbacks();                                          \
-    }
-
-#define ERR_TO_STATUS_ARGS(fmt, ...)                                      \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_ERROR) {                       \
-        char errMsg[256];                                                 \
-        snprintf(errMsg, sizeof(errMsg), fmt, __VA_ARGS__);               \
-        printf("ERROR | %s::%s: %s\n", driverName, functionName, errMsg); \
-        setStringParam(ADStatusMessage, errMsg);                          \
-        setIntegerParam(ADStatus, ADStatusError);                         \
-        callParamCallbacks();                                             \
+#define ERR_TO_STATUS(fmt, ...)                     \
+    if (this->getLogLevel() >= ADXSPDLogLevel::ERROR) { \
+        char errMsg[256];                              \
+        snprintf(errMsg, sizeof(errMsg), fmt, __VA_ARGS__); \
+        printf("ERROR | %s::%s: %s\n", driverName, __func__, errMsg); \
+        setStringParam(ADStatusMessage, errMsg);          \
+        setIntegerParam(ADStatus, ADStatusError);         \
+        callParamCallbacks();                             \
     }
 
 // Warning message formatters
-#define WARN(msg)                                   \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_WARNING) \
-        printf("WARNING | %s::%s: %s\n", driverName, functionName, msg);
+#define WARN(msg)                                       \
+    if (this->getLogLevel() >= ADXSPDLogLevel::WARNING) \
+        fprintf(stderr, "WARNING | %s::%s: %s\n", driverName, __func__, msg);
 
-#define WARN_ARGS(fmt, ...)                         \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_WARNING) \
-        printf("WARNING | %s::%s: " fmt "\n", driverName, functionName, __VA_ARGS__);
+#define WARN_ARGS(fmt, ...)                             \
+    if (this->getLogLevel() >= ADXSPDLogLevel::WARNING) \
+        fprintf(stderr, "WARNING | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
-#define WARN_TO_STATUS(msg)                                              \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_WARNING) {                    \
-        printf("WARNING | %s::%s: %s\n", driverName, functionName, msg); \
-        setStringParam(ADStatusMessage, msg);                            \
-        setIntegerParam(ADStatus, ADStatusError);                        \
-        callParamCallbacks();                                            \
+#define WARN_TO_STATUS(fmt, ...)                      \
+    if (this->getLogLevel() >= ADXSPDLogLevel::WARNING) { \
+        char warnMsg[256];                               \
+        snprintf(warnMsg, sizeof(warnMsg), fmt, __VA_ARGS__); \
+        printf("WARNING | %s::%s: %s\n", driverName, __func__, warnMsg); \
+        setStringParam(ADStatusMessage, warnMsg);          \
+        callParamCallbacks();                             \
     }
 
-#define WARN_TO_STATUS_ARGS(fmt, ...)                                        \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_WARNING) {                        \
-        char warnMsg[256];                                                   \
-        epicsSnprintf(warnMsg, sizeof(warnMsg), fmt, __VA_ARGS__);           \
-        printf("WARNING | %s::%s: %s\n", driverName, functionName, warnMsg); \
-        setStringParam(ADStatusMessage, warnMsg);                            \
-        setIntegerParam(ADStatus, ADStatusError);                            \
-        callParamCallbacks();                                                \
-    }
+// Info message formatters
+#define INFO(msg)                                    \
+    if (this->getLogLevel() >= ADXSPDLogLevel::INFO) \
+        fprintf(stdout, "INFO | %s::%s: %s\n", driverName, __func__, msg);
 
-// Info message formatters. Because there is no ASYN trace for info messages, we just use `printf`
-// here.
-#define INFO(msg)                                \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_INFO) \
-        printf("INFO | %s::%s: %s\n", driverName, functionName, msg);
+#define INFO_ARGS(fmt, ...)                          \
+    if (this->getLogLevel() >= ADXSPDLogLevel::INFO) \
+        fprintf(stdout, "INFO | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
-#define INFO_ARGS(fmt, ...)                      \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_INFO) \
-        printf("INFO | %s::%s: " fmt "\n", driverName, functionName, __VA_ARGS__);
-
-#define INFO_TO_STATUS(msg)                                           \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_INFO) {                    \
-        printf("INFO | %s::%s: %s\n", driverName, functionName, msg); \
-        setStringParam(ADStatusMessage, msg);                         \
-        callParamCallbacks();                                         \
-    }
-
-#define INFO_TO_STATUS_ARGS(fmt, ...)                                     \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_INFO) {                        \
-        char infoMsg[256];                                                \
-        epicsSnprintf(infoMsg, sizeof(infoMsg), fmt, __VA_ARGS__);        \
-        printf("INFO | %s::%s: %s\n", driverName, functionName, infoMsg); \
-        setStringParam(ADStatusMessage, infoMsg);                         \
-        callParamCallbacks();                                             \
+#define INFO_TO_STATUS(fmt, ...)                      \
+    if (this->getLogLevel() >= ADXSPDLogLevel::INFO) { \
+        char infoMsg[256];                               \
+        snprintf(infoMsg, sizeof(infoMsg), fmt, __VA_ARGS__); \
+        printf("INFO | %s::%s: %s\n", driverName, __func__, infoMsg); \
+        setStringParam(ADStatusMessage, infoMsg);          \
+        callParamCallbacks();                             \
     }
 
 // Debug message formatters
-#define DEBUG(msg)                                \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_DEBUG) \
-    printf("DEBUG | %s::%s: %s\n", driverName, functionName, msg)
+#define DEBUG(msg)                                    \
+    if (this->getLogLevel() >= ADXSPDLogLevel::DEBUG) \
+        fprintf(stdout, "DEBUG | %s::%s: %s\n", driverName, __func__, msg);
 
-#define DEBUG_ARGS(fmt, ...)                      \
-    if (this->logLevel >= AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_DEBUG) \
-        printf("DEBUG | %s::%s: " fmt "\n", driverName, functionName, __VA_ARGS__);
+#define DEBUG_ARGS(fmt, ...)                          \
+    if (this->getLogLevel() >= ADXSPDLogLevel::DEBUG) \
+        fprintf(stdout, "DEBUG | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
 #include "ADDriver.h"
 
@@ -132,7 +107,6 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
         // ADDriver overrides
         virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
         virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
-        virtual void report(FILE* fp, int details);
 
         // Destructor. Disconnects from the detector and performs cleanup
         ~AD{{ cookiecutter.driver_name }}();
@@ -147,6 +121,7 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
         bool acquisitionActive; // Flag to indicate if acquisition is active
         epicsThreadId acquisitionThreadId;
         AD{{ cookiecutter.driver_name }}_LogLevel_t logLevel = AD{{ cookiecutter.driver_name }}_LOG_LEVEL_INFO; // Current logging level
+        AD{{ cookiecutter.driver_name }}_LogLevel_t getLogLevel() { return this->logLevel; };
 
         void acquireStart();
         void acquireStop();

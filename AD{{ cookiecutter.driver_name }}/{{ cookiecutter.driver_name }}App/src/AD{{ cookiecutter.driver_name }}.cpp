@@ -51,7 +51,7 @@ extern "C" int AD{{ cookiecutter.driver_name }}Config(const char* portName, cons
  */
 static void exitCallbackC(void* pPvt){
     AD{{ cookiecutter.driver_name }}* p{{ cookiecutter.driver_name }} = (AD{{ cookiecutter.driver_name }}*) pPvt;
-    delete(p{{ cookiecutter.driver_name }});
+    delete p{{ cookiecutter.driver_name }};
 }
 
 
@@ -62,7 +62,7 @@ static void exitCallbackC(void* pPvt){
  * @param drvPvt Pointer to instance of AD{{ cookiecutter.driver_name }} driver object
  */
 static void acquisitionThreadC(void *drvPvt) {
-    AD{{ cookiecutter.driver_name }} *pPvt = (AD{{ cookiecutter.driver_name }} *)drvPvt;
+    AD{{ cookiecutter.driver_name }} *pPvt = (AD{{ cookiecutter.driver_name }}*) drvPvt;
     pPvt->acquisitionThread();
 }
 
@@ -152,7 +152,7 @@ void AD{{ cookiecutter.driver_name }}::acquisitionThread() {
         setIntegerParam(NDArraySizeY, arrayInfo.ySize);
 
         // Copy data from new frame to pArray
-        memcpy(pArray->pData, POINTER_TO_FRAME_DATA, arrayInfo.totalBytes);
+        // memcpy(pArray->pData, POINTER_TO_FRAME_DATA, arrayInfo.totalBytes);
 
         // increment the array counter
         int arrayCounter;
@@ -163,6 +163,8 @@ void AD{{ cookiecutter.driver_name }}::acquisitionThread() {
         // set the image unique ID to the number in the sequence
         pArray->uniqueId = arrayCounter;
         pArray->pAttributeList->add("ColorMode", "Color Mode", NDAttrInt32, &colorMode);
+
+        // Add any additional attributes here using pArray->pAttributeList->add(...);
 
         getAttributes(pArray->pAttributeList);
         doCallbacksGenericPointer(pArray, NDArrayData, 0);
@@ -188,7 +190,7 @@ void AD{{ cookiecutter.driver_name }}::acquisitionThread() {
 
 
 /**
- * @brief stops acquisition by aborting exposure and joinging acq thread
+ * @brief stops acquisition by aborting exposure and joining acquisition thread
  */
 void AD{{ cookiecutter.driver_name }}::acquireStop() {
     const char *functionName = "acquireStop";
@@ -241,9 +243,6 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeInt32(asynUser* pasynUser, epi
         }
     } else if(function == ADImageMode) {
         if(acquiring == 1) acquireStop();
-    } else if(function == AD{{ cookiecutter.driver_name }}_LogLevel) {
-        this-> logLevel = (AD{{ cookiecutter.driver_name }}_LogLevel_t) value;
-        INFO_ARGS("Log level set to %d", this->logLevel);
     } else {
         if (function < AD{{ cookiecutter.driver_name.upper() }}_FIRST_PARAM) {
             status = ADDriver::writeInt32(pasynUser, value);
@@ -291,14 +290,6 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, e
     }
     else DEBUG_ARGS("function=%d value=%f\n", function, value);
     return status;
-}
-
-
-void AD{{ cookiecutter.driver_name }}::report(FILE* fp, int details){
-    const char* functionName = "report";
-    if(details > 0){
-        ADDriver::report(fp, details);
-    }
 }
 
 
@@ -356,7 +347,7 @@ AD{{ cookiecutter.driver_name }}::~AD{{ cookiecutter.driver_name }}(){
 //-------------------------------------------------------------
 
 /* {{ cookiecutter.driver_name }}Config -> These are the args passed to the constructor in the epics config function */
-static const iocshArg {{ cookiecutter.driver_name }}ConfigArg0 = { "Port name",        iocshArgString };
+static const iocshArg {{ cookiecutter.driver_name }}ConfigArg0 = { "Port name", iocshArgString };
 
 // This parameter must be customized by the driver author. Generally a URL, Serial Number, ID, IP are used to connect.
 static const iocshArg {{ cookiecutter.driver_name }}ConfigArg1 = { "Connection Param", iocshArgString };

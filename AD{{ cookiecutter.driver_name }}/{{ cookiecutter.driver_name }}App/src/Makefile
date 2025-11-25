@@ -3,19 +3,16 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
-USR_CPPFLAGS += -D__X64
-endif
-
-USR_CPPFLAGS += -std=c++11
+USR_CPPFLAGS += -std=c++17
 
 INC += AD{{ cookiecutter.driver_name }}.h
+INC += AD{{ cookiecutter.driver_name }}ParamDefs.h
 
 LIBRARY_IOC = AD{{ cookiecutter.driver_name }} 
 LIB_SRCS += AD{{ cookiecutter.driver_name }}.cpp
+LIB_SRCS += AD{{ cookiecutter.driver_name }}ParamDefs.cpp
 
-
-DBD += {{ cookiecutter.driver_name[0].lower() + cookiecutter.driver_name[1:] }}Support.dbd
+DBD += AD{{ cookiecutter.driver_name }}Support.dbd
 
 include $(ADCORE)/ADApp/commonLibraryMakefile
 
