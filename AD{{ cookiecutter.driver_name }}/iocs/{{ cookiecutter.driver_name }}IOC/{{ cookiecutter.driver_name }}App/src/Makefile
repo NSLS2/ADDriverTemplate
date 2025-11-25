@@ -7,7 +7,7 @@ PROD_NAME = {{ cookiecutter.driver_name }}App
 PROD_IOC += $(PROD_NAME)
 
 DBD += $(PROD_NAME).dbd
-$(PROD_NAME)_DBD += {{ cookiecutter.driver_name }}Support.dbd
+$(PROD_NAME)_DBD += AD{{ cookiecutter.driver_name }}Support.dbd
 
 $(PROD_NAME)_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp $(PROD_NAME)Main.cpp
 

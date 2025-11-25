@@ -23,7 +23,10 @@ realuninstall_iocs:
 .PHONY: realuninstall realuninstall_iocs
 
 bobfiles:
-	epicsdb2bob {{ cookiecutter.driver_name }}App/Db -m P=DEV:{{ cookiecutter.driver_name.upper() }}1 R=cam1: PORT={{ cookiecutter.driver_name.upper() }}1 ADDR=0 TIMEOUT=1 -d -r _RBV -t none --macro_level launcher
+	pixi run make-bobfiles
 
 paramdefs:
-	scripts/generate_param_defs.py {{ cookiecutter.driver_name }}App/Db {{ cookiecutter.driver_name }}App/src
+	pixi run make-paramdefs
+
+lint:
+	pixi run lint

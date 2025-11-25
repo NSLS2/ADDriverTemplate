@@ -17,16 +17,13 @@
 {% if cookiecutter.with_cpr == true %}
 #include <cpr/cpr.h>
 {% endif %}
-
 {% if cookiecutter.with_zmq == true %}
 #include <zmq.h>
 {% endif %}
-
 {% if cookiecutter.with_json %}
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 {% endif %}
-
 {% if cookiecutter.with_magic_enum %}
 #include <magic_enum/magic_enum.hpp>
 {% endif %}
@@ -37,6 +34,7 @@ using json = nlohmann::json;
 #include <epicsString.h>
 #include <epicsThread.h>
 #include <epicsTime.h>
+#include <iocsh.h>
 #include "ADDriver.h"
 
 
@@ -45,7 +43,7 @@ using json = nlohmann::json;
 #define AD{{ cookiecutter.driver_name.upper() }}_REVISION 0
 #define AD{{ cookiecutter.driver_name.upper() }}_MODIFICATION 0
 
-#define driverName "AD{{ cookiecutter.driver_name }}";
+#define driverName "AD{{ cookiecutter.driver_name }}"
 
 
 enum class AD{{ cookiecutter.driver_name }}LogLevel {
@@ -54,71 +52,43 @@ enum class AD{{ cookiecutter.driver_name }}LogLevel {
     WARNING = 20,  // Warnings and errors
     INFO = 30,     // Info, warnings, and errors
     DEBUG = 40     // Debugging information
-}
+};
 
 
 // Error message formatters
 #define ERR(msg)                                      \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::ERROR) \
+    if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::ERROR) \
         fprintf(stderr, "ERROR | %s::%s: %s\n", driverName, __func__, msg);
 
 #define ERR_ARGS(fmt, ...)                            \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::ERROR) \
+    if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::ERROR) \
         fprintf(stderr, "ERROR | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
-
-#define ERR_TO_STATUS(fmt, ...)                     \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::ERROR) { \
-        char errMsg[256];                              \
-        snprintf(errMsg, sizeof(errMsg), fmt, __VA_ARGS__); \
-        printf("ERROR | %s::%s: %s\n", driverName, __func__, errMsg); \
-        setStringParam(ADStatusMessage, errMsg);          \
-        setIntegerParam(ADStatus, ADStatusError);         \
-        callParamCallbacks();                             \
-    }
 
 // Warning message formatters
 #define WARN(msg)                                       \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::WARNING) \
+    if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::WARNING) \
         fprintf(stderr, "WARNING | %s::%s: %s\n", driverName, __func__, msg);
 
 #define WARN_ARGS(fmt, ...)                             \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::WARNING) \
+    if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::WARNING) \
         fprintf(stderr, "WARNING | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
-
-#define WARN_TO_STATUS(fmt, ...)                      \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::WARNING) { \
-        char warnMsg[256];                               \
-        snprintf(warnMsg, sizeof(warnMsg), fmt, __VA_ARGS__); \
-        printf("WARNING | %s::%s: %s\n", driverName, __func__, warnMsg); \
-        setStringParam(ADStatusMessage, warnMsg);          \
-        callParamCallbacks();                             \
-    }
 
 // Info message formatters
 #define INFO(msg)                                    \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::INFO) \
+    if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::INFO) \
         fprintf(stdout, "INFO | %s::%s: %s\n", driverName, __func__, msg);
 
 #define INFO_ARGS(fmt, ...)                          \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::INFO) \
+    if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::INFO) \
         fprintf(stdout, "INFO | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
-
-#define INFO_TO_STATUS(fmt, ...)                      \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::INFO) { \
-        char infoMsg[256];                               \
-        snprintf(infoMsg, sizeof(infoMsg), fmt, __VA_ARGS__); \
-        printf("INFO | %s::%s: %s\n", driverName, __func__, infoMsg); \
-        setStringParam(ADStatusMessage, infoMsg);          \
-        callParamCallbacks();                             \
-    }
 
 // Debug message formatters
 #define DEBUG(msg)                                    \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::DEBUG) \
+    if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::DEBUG) \
         fprintf(stdout, "DEBUG | %s::%s: %s\n", driverName, __func__, msg);
 
 #define DEBUG_ARGS(fmt, ...)                          \
-    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::DEBUG) \
+    if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::DEBUG) \
         fprintf(stdout, "DEBUG | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
 
@@ -130,13 +100,14 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
    public:
 
     // Constructor for the AD{{ cookiecutter.driver_name }} driver
-    AD{{ cookiecutter.driver_name }}(const char* portName, ......);
+    AD{{ cookiecutter.driver_name }}(const char* portName, const char* connectionParam);
 
     // ADDriver overrides
     virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
     virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
 
-
+    // Must be public to be used as thread entry point
+    void acquisitionThread();
 
     // Destructor. Disconnects from the detector and performs cleanup
     ~AD{{ cookiecutter.driver_name }}();
@@ -144,7 +115,7 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
    protected:
 
 // Parameter definitions auto-generated from *.template files, by `make paramdefs`
-#include "AD{{ cookiecutter.driver_name }}ParamsDefs.h"
+#include "AD{{ cookiecutter.driver_name }}ParamDefs.h"
 
     private:
 
@@ -154,9 +125,8 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
 
         void acquireStart();
         void acquireStop();
-        void acquisitionThread();
+        void createAllParams();
 
 };
 
 #endif
-`

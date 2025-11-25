@@ -2,8 +2,10 @@
 # Run "gnumake clean uninstall install" in the application
 # top directory each time this file is changed.
 
-AD{{ cookiecutter.driver_name.upper() }}=../../..
+AD{{ cookiecutter.driver_name.upper() }}=$(TOP)/../..
 
--include $(TOP)/../configure/RELEASE_LIBS_INCLUDE
+-include $(AD{{ cookiecutter.driver_name.upper() }})/configure/RELEASE
+-include $(AD{{ cookiecutter.driver_name.upper() }})/configure/RELEASE.local
+-include $(TOP)/../../../configure/RELEASE_PRODS_INCLUDE
 -include $(TOP)/RELEASE.local
 -include $(TOP)/configure/RELEASE.local

@@ -1,6 +1,18 @@
 
 errlogInit(20000)
 
+epicsEnvSet("EPICS_CA_AUTO_ADDR_LIST",          "NO")
+epicsEnvSet("EPICS_CA_ADDR_LIST",               "127.0.0.1")
+epicsEnvSet("EPICS_CAS_AUTO_BEACON_ADDR_LIST",  "NO")
+epicsEnvSet("EPICS_CAS_BEACON_ADDR_LIST",       "127.0.0.1")
+epicsEnvSet("EPICS_CAS_INTF_ADDR_LIST",         "127.0.0.1")
+epicsEnvSet("EPICS_PVA_AUTO_ADDR_LIST",         "NO")
+epicsEnvSet("EPICS_PVA_ADDR_LIST",              "127.0.0.1")
+epicsEnvSet("EPICS_PVAS_AUTO_BEACON_ADDR_LIST", "NO")
+epicsEnvSet("EPICS_PVAS_BEACON_ADDR_LIST",      "127.0.0.1")
+epicsEnvSet("EPICS_PVAS_INTF_ADDR_LIST",        "127.0.0.1")
+
+
 < envPaths
 
 epicsEnvSet("ENGINEER", "{{ cookiecutter.author }}")
@@ -20,7 +32,7 @@ epicsEnvSet("NDFTVL",   "SHORT") #'UCHAR' (8bit B/W, Color) | 'SHORT' (16bit B/W
 epicsEnvSet("CBUFFS",   "500")
 epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 
-dbLoadDatabase("$(AD{{ cookiecutter.driver_name }})/iocs/{{ cookiecutter.driver_name }}IOC/dbd/{{ cookiecutter.driver_name }}App.dbd")
+dbLoadDatabase("$(AD{{ cookiecutter.driver_name.upper() }})/iocs/{{ cookiecutter.driver_name }}IOC/dbd/{{ cookiecutter.driver_name }}App.dbd")
 {{ cookiecutter.driver_name }}App_registerRecordDeviceDriver(pdbbase)
 
 # Create instance of AD{{ cookiecutter.driver_name }} driver
@@ -28,10 +40,7 @@ dbLoadDatabase("$(AD{{ cookiecutter.driver_name }})/iocs/{{ cookiecutter.driver_
 AD{{ cookiecutter.driver_name }}Config("$(PORT)", "0")
 epicsThreadSleep(2)
 
-# Default logging settings
-asynSetTraceIOMask($(PORT), 0, 2)
 
-dbLoadRecords("$(ADCORE)/db/ADBase.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 dbLoadRecords("$(AD{{ cookiecutter.driver_name.upper() }})/db/AD{{ cookiecutter.driver_name }}.template","P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 
 #

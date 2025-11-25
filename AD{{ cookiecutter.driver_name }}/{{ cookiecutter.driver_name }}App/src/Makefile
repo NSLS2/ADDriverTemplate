@@ -8,7 +8,7 @@ USR_CPPFLAGS += -std=c++17
 INC += AD{{ cookiecutter.driver_name }}.h
 INC += AD{{ cookiecutter.driver_name }}ParamDefs.h
 
-LIBRARY_IOC = AD{{ cookiecutter.driver_name }} 
+LIBRARY_IOC = AD{{ cookiecutter.driver_name }}
 LIB_SRCS += AD{{ cookiecutter.driver_name }}.cpp
 LIB_SRCS += AD{{ cookiecutter.driver_name }}ParamDefs.cpp
 
