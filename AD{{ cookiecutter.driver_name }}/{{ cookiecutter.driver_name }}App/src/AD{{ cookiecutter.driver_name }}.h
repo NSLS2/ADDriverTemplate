@@ -1,12 +1,12 @@
 /*
  * Header file for the AD{{ cookiecutter.driver_name }} EPICS driver
- * 
+ *
  * This file was initially generated with the help of the ADDriverTemplate:
  * https://github.com/NSLS2/ADDriverTemplate on {% now 'local', '%d/%m/%Y' %}
  *
  * Author: {{ cookiecutter.author }}
- * 
- * Copyright (c) : {{ cookiecutter.institution }}, {% now 'local', '%Y' %}
+ *
+ * Copyright (c): {{ cookiecutter.institution }}, {% now 'local', '%Y' %}
  *
  */
 
@@ -15,8 +15,8 @@
 #define AD{{ cookiecutter.driver_name.upper() }}_H
 
 // version numbers
-#define AD{{ cookiecutter.driver_name.upper() }}_VERSION      0
-#define AD{{ cookiecutter.driver_name.upper() }}_REVISION     0
+#define AD{{ cookiecutter.driver_name.upper() }}_VERSION 0
+#define AD{{ cookiecutter.driver_name.upper() }}_REVISION 0
 #define AD{{ cookiecutter.driver_name.upper() }}_MODIFICATION 0
 
 typedef enum AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL {
@@ -99,19 +99,21 @@ typedef enum AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL {
  */
 class AD{{ cookiecutter.driver_name }} : ADDriver{
 
-    public:
+   public:
 
-        // Constructor for the AD{{ cookiecutter.driver_name }} driver
-        AD{{ cookiecutter.driver_name }}(const char* portName, const char* connectionParam);
+    // Constructor for the AD{{ cookiecutter.driver_name }} driver
+    AD{{ cookiecutter.driver_name }}(const char* portName, ......);
 
-        // ADDriver overrides
-        virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
-        virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
+    // ADDriver overrides
+    virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
+    virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
 
-        // Destructor. Disconnects from the detector and performs cleanup
-        ~AD{{ cookiecutter.driver_name }}();
 
-    protected:
+
+    // Destructor. Disconnects from the detector and performs cleanup
+    ~AD{{ cookiecutter.driver_name }}();
+
+   protected:
 
 // Parameter definitions auto-generated from *.template files, by `make paramdefs`
 #include "AD{{ cookiecutter.driver_name }}ParamsDefs.h"
@@ -121,15 +123,13 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
         bool acquisitionActive; // Flag to indicate if acquisition is active
         epicsThreadId acquisitionThreadId;
         AD{{ cookiecutter.driver_name }}_LogLevel_t logLevel = AD{{ cookiecutter.driver_name }}_LOG_LEVEL_INFO; // Current logging level
-        AD{{ cookiecutter.driver_name }}_LogLevel_t getLogLevel() { return this->logLevel; };
 
         void acquireStart();
         void acquireStop();
         void acquisitionThread();
 
+    AD{{ cookiecutter.driver_name }}_LogLevel_t logLevel = AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_INFO;
 };
-
-// Stores number of additional PV parameters are added by the driver
 
 #endif
 `

@@ -21,7 +21,7 @@ epicsEnvSet("CBUFFS",   "500")
 epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 
 dbLoadDatabase("$(AD{{ cookiecutter.driver_name }})/iocs/{{ cookiecutter.driver_name }}IOC/dbd/{{ cookiecutter.driver_name }}App.dbd")
-{{ cookiecutter.driver_name }}App_registerRecordDeviceDriver(pdbbase) 
+{{ cookiecutter.driver_name }}App_registerRecordDeviceDriver(pdbbase)
 
 # Create instance of AD{{ cookiecutter.driver_name }} driver
 #AD{{ cookiecutter.driver_name }}Config(const char* portName, const char* connectionParam)
