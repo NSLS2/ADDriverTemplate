@@ -1,5 +1,6 @@
 {
     "author": "John Smith",
+    "author_email": "john.smith@example.com",
     "driver_name": "MyNewDriver",
     "github_org": "NSLS2",
     "institution": "Brookhaven National Laboratory"
