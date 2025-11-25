@@ -5,6 +5,9 @@
     "github_org": "NSLS2",
     "institution": "Brookhaven National Laboratory",
     "_copy_without_render": [
-        "AD{{ cookiecutter.driver_name }}/{{ cookiecutter.driver_name }}Support/cpr/*"
+        "*cpr",
+        "*json",
+        "*magic_enum",
+        "*gtest"
     ]
 }
