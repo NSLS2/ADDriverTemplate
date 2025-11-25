@@ -34,10 +34,29 @@ CHECK_RELEASE = YES
 #   take effect.
 #IOCS_APPL_TOP = </IOC/path/to/application/top>
 
-WITH_GTEST = NO
-WITH_MAGIC_ENUM = NO
+{% if cookiecutter.with_cpr == true %}
 WITH_CPR = YES
+{% else %}
+WITH_CPR = NO
+{% endif %}
+
+{% if cookiecutter.with_json == true %}
 WITH_JSON = YES
+{% else %}
+WITH_JSON = NO
+{% endif %}
+
+{% if cookiecutter.with_gtest == true %}
+WITH_GTEST = YES
+{% else %}
+WITH_GTEST = NO
+{% endif %}
+
+{% if cookiecutter.with_magic_enum == true %}
+WITH_MAGIC_ENUM = YES
+{% else %}
+WITH_MAGIC_ENUM = NO
+{% endif %}
 
 # Get settings from AREA_DETECTOR, so we only have to configure once for all detectors if we want to
 -include $(AREA_DETECTOR)/configure/CONFIG_SITE

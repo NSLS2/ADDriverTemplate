@@ -14,8 +14,16 @@ $(PROD_NAME)_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp $(PROD_NAME)Mai
 # Add any libraries built by the EPICS build system here
 $(PROD_NAME)_LIBS += AD{{ cookiecutter.driver_name }}
 
+{% if cookiecutter.with_cpr == true %}
+$(PROD_NAME)_LIBS += cpr
+$(PROD_NAME)_SYS_LIBS += curl z
+{% endif %}
+
 # Add any system libraries here
-$(PROD_NAME)_SYS_LIBS +=
+
+{% if cookiecutter.with_zmq == true %}
+$(PROD_NAME)_SYS_LIBS += zmq
+{% endif %}
 
 include $(ADCORE)/ADApp/commonDriverMakefile
 

@@ -14,31 +14,60 @@
 #ifndef AD{{ cookiecutter.driver_name.upper() }}_H
 #define AD{{ cookiecutter.driver_name.upper() }}_H
 
+{% if cookiecutter.with_cpr == true %}
+#include <cpr/cpr.h>
+{% endif %}
+
+{% if cookiecutter.with_zmq == true %}
+#include <zmq.h>
+{% endif %}
+
+{% if cookiecutter.with_json %}
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+{% endif %}
+
+{% if cookiecutter.with_magic_enum %}
+#include <magic_enum/magic_enum.hpp>
+{% endif %}
+
+#include <epicsExit.h>
+#include <epicsExport.h>
+#include <epicsStdio.h>
+#include <epicsString.h>
+#include <epicsThread.h>
+#include <epicsTime.h>
+#include "ADDriver.h"
+
+
 // version numbers
 #define AD{{ cookiecutter.driver_name.upper() }}_VERSION 0
 #define AD{{ cookiecutter.driver_name.upper() }}_REVISION 0
 #define AD{{ cookiecutter.driver_name.upper() }}_MODIFICATION 0
 
-typedef enum AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL {
-    AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_NONE = 0,      // No logging
-    AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_ERROR = 10,    // Error messages only
-    AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_WARNING = 20,  // Warnings and errors
-    AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_INFO = 30,     // Info, warnings, and errors
-    AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_DEBUG = 40     // Debugging information
-} AD{{ cookiecutter.driver_name }}_LogLevel_t;
+#define driverName "AD{{ cookiecutter.driver_name }}";
+
+
+enum class AD{{ cookiecutter.driver_name }}LogLevel {
+    NONE = 0,      // No logging
+    ERROR = 10,    // Error messages only
+    WARNING = 20,  // Warnings and errors
+    INFO = 30,     // Info, warnings, and errors
+    DEBUG = 40     // Debugging information
+}
 
 
 // Error message formatters
 #define ERR(msg)                                      \
-    if (this->getLogLevel() >= ADXSPDLogLevel::ERROR) \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::ERROR) \
         fprintf(stderr, "ERROR | %s::%s: %s\n", driverName, __func__, msg);
 
 #define ERR_ARGS(fmt, ...)                            \
-    if (this->getLogLevel() >= ADXSPDLogLevel::ERROR) \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::ERROR) \
         fprintf(stderr, "ERROR | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
 #define ERR_TO_STATUS(fmt, ...)                     \
-    if (this->getLogLevel() >= ADXSPDLogLevel::ERROR) { \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::ERROR) { \
         char errMsg[256];                              \
         snprintf(errMsg, sizeof(errMsg), fmt, __VA_ARGS__); \
         printf("ERROR | %s::%s: %s\n", driverName, __func__, errMsg); \
@@ -49,15 +78,15 @@ typedef enum AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL {
 
 // Warning message formatters
 #define WARN(msg)                                       \
-    if (this->getLogLevel() >= ADXSPDLogLevel::WARNING) \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::WARNING) \
         fprintf(stderr, "WARNING | %s::%s: %s\n", driverName, __func__, msg);
 
 #define WARN_ARGS(fmt, ...)                             \
-    if (this->getLogLevel() >= ADXSPDLogLevel::WARNING) \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::WARNING) \
         fprintf(stderr, "WARNING | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
 #define WARN_TO_STATUS(fmt, ...)                      \
-    if (this->getLogLevel() >= ADXSPDLogLevel::WARNING) { \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::WARNING) { \
         char warnMsg[256];                               \
         snprintf(warnMsg, sizeof(warnMsg), fmt, __VA_ARGS__); \
         printf("WARNING | %s::%s: %s\n", driverName, __func__, warnMsg); \
@@ -67,15 +96,15 @@ typedef enum AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL {
 
 // Info message formatters
 #define INFO(msg)                                    \
-    if (this->getLogLevel() >= ADXSPDLogLevel::INFO) \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::INFO) \
         fprintf(stdout, "INFO | %s::%s: %s\n", driverName, __func__, msg);
 
 #define INFO_ARGS(fmt, ...)                          \
-    if (this->getLogLevel() >= ADXSPDLogLevel::INFO) \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::INFO) \
         fprintf(stdout, "INFO | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
 #define INFO_TO_STATUS(fmt, ...)                      \
-    if (this->getLogLevel() >= ADXSPDLogLevel::INFO) { \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::INFO) { \
         char infoMsg[256];                               \
         snprintf(infoMsg, sizeof(infoMsg), fmt, __VA_ARGS__); \
         printf("INFO | %s::%s: %s\n", driverName, __func__, infoMsg); \
@@ -85,14 +114,13 @@ typedef enum AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL {
 
 // Debug message formatters
 #define DEBUG(msg)                                    \
-    if (this->getLogLevel() >= ADXSPDLogLevel::DEBUG) \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::DEBUG) \
         fprintf(stdout, "DEBUG | %s::%s: %s\n", driverName, __func__, msg);
 
 #define DEBUG_ARGS(fmt, ...)                          \
-    if (this->getLogLevel() >= ADXSPDLogLevel::DEBUG) \
+    if (this->getLogLevel() >= AD{{ cookiecutter.driver_name }}LogLevel::DEBUG) \
         fprintf(stdout, "DEBUG | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
-#include "ADDriver.h"
 
 /*
  * Class definition of the AD{{ cookiecutter.driver_name }} driver
@@ -122,13 +150,12 @@ class AD{{ cookiecutter.driver_name }} : ADDriver{
 
         bool acquisitionActive; // Flag to indicate if acquisition is active
         epicsThreadId acquisitionThreadId;
-        AD{{ cookiecutter.driver_name }}_LogLevel_t logLevel = AD{{ cookiecutter.driver_name }}_LOG_LEVEL_INFO; // Current logging level
+        AD{{ cookiecutter.driver_name }}LogLevel logLevel = AD{{ cookiecutter.driver_name }}LogLevel::INFO; // Current logging level
 
         void acquireStart();
         void acquireStop();
         void acquisitionThread();
 
-    AD{{ cookiecutter.driver_name }}_LogLevel_t logLevel = AD{{ cookiecutter.driver_name.upper() }}_LOG_LEVEL_INFO;
 };
 
 #endif
