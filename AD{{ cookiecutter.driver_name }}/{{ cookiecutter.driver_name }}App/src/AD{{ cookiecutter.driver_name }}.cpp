@@ -10,7 +10,7 @@
  *
  */
 
-#include "AD{{ cookiecutter.driver_name }}"
+#include "AD{{ cookiecutter.driver_name }}.h"
 
 using namespace std;
 
