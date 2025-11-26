@@ -1,16 +1,16 @@
 /**
- * Main source file for the ADMyNewDriver EPICS driver
+ * Main source file for the AD{{ cookiecutter.driver_name }} EPICS driver
  *
  * This file was initially generated with the help of the ADDriverTemplate:
  * https://github.com/NSLS2/ADDriverTemplate on 16/07/2025
  *
- * Author: John Smith
+ * Author: {{ cookiecutter.author }}
  *
- * Copyright (c) : Brookhaven National Laboratory, 2025
+ * Copyright (c) : {{ cookiecutter.institution }}, {% now 'local', '%Y' %}
  *
  */
 
-#include "ADMyNewDriver.h"
+#include "AD{{ cookiecutter.driver_name }}"
 
 using namespace std;
 
