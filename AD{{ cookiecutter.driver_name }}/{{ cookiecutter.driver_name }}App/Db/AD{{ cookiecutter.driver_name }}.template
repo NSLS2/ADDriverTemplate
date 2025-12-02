@@ -20,23 +20,25 @@
 #
 ##################################################################
 
+include "ADBase.template"
+
 
 record(mbbo, "$(P)$(R)LogLevel"){
-  field(DTYP, "asynInt32")
-  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT)){{ cookiecutter.driver_name.upper() }}_LOG_LEVEL")
-  field(ZRVL, "0")
-  field(ONVL, "10")
-  field(TWVL, "20")
-  field(THVL, "30")
-  field(FRVL, "40")
-  field(ZRST, "None")
-  field(ONST, "Error")
-  field(TWST, "Warning")
-  field(THST, "Info")
-  field(FRST, "Debug")
-  field(VAL, "30")
-  field(PINI, "YES")
-  field(DESC, "Driver logging level")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT)){{ cookiecutter.driver_name.upper() }}_LOG_LEVEL")
+    field(ZRVL, "0")
+    field(ONVL, "10")
+    field(TWVL, "20")
+    field(THVL, "30")
+    field(FRVL, "40")
+    field(ZRST, "None")
+    field(ONST, "Error")
+    field(TWST, "Warning")
+    field(THST, "Info")
+    field(FRST, "Debug")
+    field(VAL, "30")
+    field(PINI, "YES")
+    field(DESC, "Driver logging level")
 }
 
 record(mbbi, "$(P)$(R)LogLevel_RBV") {

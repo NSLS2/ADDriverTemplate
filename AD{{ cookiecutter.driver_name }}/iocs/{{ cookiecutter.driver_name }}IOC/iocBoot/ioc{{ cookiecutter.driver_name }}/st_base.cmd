@@ -16,9 +16,9 @@ epicsEnvSet("EPICS_PVAS_INTF_ADDR_LIST",        "127.0.0.1")
 < envPaths
 
 epicsEnvSet("ENGINEER", "{{ cookiecutter.author }}")
-epicsEnvSet("PORT",     "{{ cookiecutter.driver_name.upper() + '1' }}")
+epicsEnvSet("PORT",     "{{ cookiecutter.driver_name.upper() }}1")
 epicsEnvSet("IOC",      "ioc{{ cookiecutter.driver_name }}")
-epicsEnvSet("PREFIX",   "DEV:{{ cookiecutter.driver_name.upper() }}1:")
+epicsEnvSet("PREFIX",   "{{ cookiecutter.driver_name.upper() }}")
 epicsEnvSet("HOSTNAME", "localhost")
 epicsEnvSet("IOCNAME",  "{{ cookiecutter.driver_name }}")
 epicsEnvSet("QSIZE",    "30")
@@ -53,7 +53,7 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 # Load all other plugins using commonPlugins.cmd
 < $(ADCORE)/iocBoot/commonPlugins.cmd
 
-set_requestfile_path("$(AD{{ cookiecutter.driver_name }})/db")
+set_requestfile_path("$(AD{{ cookiecutter.driver_name.upper() }})/db")
 
 iocInit()
 

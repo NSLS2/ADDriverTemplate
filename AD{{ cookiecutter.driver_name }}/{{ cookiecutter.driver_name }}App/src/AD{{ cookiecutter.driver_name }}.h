@@ -22,7 +22,6 @@
 {% endif %}
 {% if cookiecutter.with_json %}
 #include <nlohmann/json.hpp>
-using json = nlohmann::json;
 {% endif %}
 {% if cookiecutter.with_magic_enum %}
 #include <magic_enum/magic_enum.hpp>
@@ -35,6 +34,7 @@ using json = nlohmann::json;
 #include <epicsThread.h>
 #include <epicsTime.h>
 #include <iocsh.h>
+#include <string>
 #include "ADDriver.h"
 
 
@@ -91,6 +91,11 @@ enum class AD{{ cookiecutter.driver_name }}LogLevel {
     if (this->logLevel >= AD{{ cookiecutter.driver_name }}LogLevel::DEBUG) \
         fprintf(stdout, "DEBUG | %s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__);
 
+{% if cookiecutter.with_json %}
+using json = nlohmann::json;
+{% endif %}
+
+using namespace std;
 
 /*
  * Class definition of the AD{{ cookiecutter.driver_name }} driver

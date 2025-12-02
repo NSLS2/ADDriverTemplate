@@ -168,7 +168,6 @@ void AD{{ cookiecutter.driver_name }}::acquisitionThread() {
  * @brief stops acquisition by aborting exposure and joining acquisition thread
  */
 void AD{{ cookiecutter.driver_name }}::acquireStop() {
-    const char* functionName = "acquireStop";
 
     if (this->acquisitionActive) {
         // Mark acquisition as inactive
@@ -238,6 +237,9 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, e
     int acquiring;
     getIntegerParam(ADAcquire, &acquiring);
 
+    const char* paramName;
+    getParamName(function, &paramName);
+
     if (function == ADAcquireTime) {
         if (acquiring) acquireStop();
     } else{
@@ -249,10 +251,10 @@ asynStatus AD{{ cookiecutter.driver_name }}::writeFloat64(asynUser* pasynUser, e
     callParamCallbacks();
 
     if (status) {
-        ERR_ARGS("status=%d, function=%d, value=%f\n", status, function, value);
+        ERR_ARGS("status=%d, param=%s, value=%f", status, paramName, value);
         return asynError;
     } else {
-        DEBUG_ARGS("function=%d value=%f\n", function, value);
+        DEBUG_ARGS("param=%s value=%f", paramName, value);
     }
     return status;
 }
